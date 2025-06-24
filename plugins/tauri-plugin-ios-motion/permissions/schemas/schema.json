@@ -487,6 +487,18 @@
           "markdownDescription": "Denies the is_step_counting_available command without any pre-configured scope."
         },
         {
+          "description": "Enables the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ping",
+          "markdownDescription": "Enables the ping command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ping",
+          "markdownDescription": "Denies the ping command without any pre-configured scope."
+        },
+        {
           "description": "Enables the query_activity_history command without any pre-configured scope.",
           "type": "string",
           "const": "allow-query-activity-history",
@@ -677,6 +689,12 @@
           "type": "string",
           "const": "deny-stop-pedometer-updates",
           "markdownDescription": "Denies the stop_pedometer_updates command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`",
+          "type": "string",
+          "const": "default",
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`"
         }
       ]
     }

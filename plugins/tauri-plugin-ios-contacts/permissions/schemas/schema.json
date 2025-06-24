@@ -449,6 +449,12 @@
           "type": "string",
           "const": "deny-update-group",
           "markdownDescription": "Denies the update_group command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`",
+          "type": "string",
+          "const": "default",
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`"
         }
       ]
     }

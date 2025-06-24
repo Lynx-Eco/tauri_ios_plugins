@@ -1,3 +1,10 @@
+## Default Permission
+
+Default permissions for the plugin
+
+#### This default permission set includes the following:
+
+- `allow-ping`
 
 ## Permission Table
 
@@ -264,6 +271,32 @@ Enables the has_item command without any pre-configured scope.
 <td>
 
 Denies the has_item command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`ios-keychain:allow-ping`
+
+</td>
+<td>
+
+Enables the ping command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`ios-keychain:deny-ping`
+
+</td>
+<td>
+
+Denies the ping command without any pre-configured scope.
 
 </td>
 </tr>

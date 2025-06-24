@@ -379,6 +379,18 @@
           "markdownDescription": "Denies the get_widget_url command without any pre-configured scope."
         },
         {
+          "description": "Enables the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ping",
+          "markdownDescription": "Enables the ping command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ping",
+          "markdownDescription": "Denies the ping command without any pre-configured scope."
+        },
+        {
           "description": "Enables the preview_widget_data command without any pre-configured scope.",
           "type": "string",
           "const": "allow-preview-widget-data",
@@ -461,6 +473,12 @@
           "type": "string",
           "const": "deny-set-widget-url",
           "markdownDescription": "Denies the set_widget_url command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`",
+          "type": "string",
+          "const": "default",
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`"
         }
       ]
     }

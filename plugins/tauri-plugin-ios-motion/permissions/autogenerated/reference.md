@@ -1,3 +1,10 @@
+## Default Permission
+
+Default permissions for the plugin
+
+#### This default permission set includes the following:
+
+- `allow-ping`
 
 ## Permission Table
 
@@ -420,6 +427,32 @@ Enables the is_step_counting_available command without any pre-configured scope.
 <td>
 
 Denies the is_step_counting_available command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`ios-motion:allow-ping`
+
+</td>
+<td>
+
+Enables the ping command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`ios-motion:deny-ping`
+
+</td>
+<td>
+
+Denies the ping command without any pre-configured scope.
 
 </td>
 </tr>

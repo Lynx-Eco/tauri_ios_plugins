@@ -1,31 +1,8 @@
-const COMMANDS: &[&str] = &[
-    "pick_file",
-    "pick_multiple_files",
-    "pick_folder",
-    "save_file",
-    "open_in_files",
-    "import_from_files",
-    "export_to_files",
-    "list_documents",
-    "read_file",
-    "write_file",
-    "delete_file",
-    "move_file",
-    "copy_file",
-    "create_folder",
-    "get_file_info",
-    "share_file",
-    "preview_file",
-    "get_cloud_status",
-    "download_from_cloud",
-    "evict_from_local",
-    "start_monitoring",
-    "stop_monitoring",
-];
+const COMMANDS: &[&str] = &["ping"];
 
 fn main() {
-    tauri_plugin::Builder::new(COMMANDS)
-        .android_path("android")
-        .ios_path("ios")
-        .build();
+  tauri_plugin::Builder::new(COMMANDS)
+    .android_path("android")
+    .ios_path("ios")
+    .build();
 }

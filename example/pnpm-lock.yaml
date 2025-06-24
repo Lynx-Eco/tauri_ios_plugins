@@ -14,6 +14,60 @@ importers:
       '@tauri-apps/plugin-opener':
         specifier: ^2
         version: 2.3.0
+      '@tauri-plugin/ios-barometer':
+        specifier: file:../plugins/tauri-plugin-ios-barometer
+        version: file:../plugins/tauri-plugin-ios-barometer
+      '@tauri-plugin/ios-bluetooth':
+        specifier: file:../plugins/tauri-plugin-ios-bluetooth
+        version: file:../plugins/tauri-plugin-ios-bluetooth
+      '@tauri-plugin/ios-callkit':
+        specifier: file:../plugins/tauri-plugin-ios-callkit
+        version: file:../plugins/tauri-plugin-ios-callkit
+      '@tauri-plugin/ios-camera':
+        specifier: file:../plugins/tauri-plugin-ios-camera
+        version: file:../plugins/tauri-plugin-ios-camera
+      '@tauri-plugin/ios-contacts':
+        specifier: file:../plugins/tauri-plugin-ios-contacts
+        version: tauri-plugin-ios-contacts-api@file:../plugins/tauri-plugin-ios-contacts
+      '@tauri-plugin/ios-files':
+        specifier: file:../plugins/tauri-plugin-ios-files
+        version: file:../plugins/tauri-plugin-ios-files
+      '@tauri-plugin/ios-healthkit':
+        specifier: file:../plugins/tauri-plugin-ios-healthkit
+        version: file:../plugins/tauri-plugin-ios-healthkit
+      '@tauri-plugin/ios-keychain':
+        specifier: file:../plugins/tauri-plugin-ios-keychain
+        version: file:../plugins/tauri-plugin-ios-keychain
+      '@tauri-plugin/ios-location':
+        specifier: file:../plugins/tauri-plugin-ios-location
+        version: file:../plugins/tauri-plugin-ios-location
+      '@tauri-plugin/ios-messages':
+        specifier: file:../plugins/tauri-plugin-ios-messages
+        version: file:../plugins/tauri-plugin-ios-messages
+      '@tauri-plugin/ios-microphone':
+        specifier: file:../plugins/tauri-plugin-ios-microphone
+        version: file:../plugins/tauri-plugin-ios-microphone
+      '@tauri-plugin/ios-motion':
+        specifier: file:../plugins/tauri-plugin-ios-motion
+        version: file:../plugins/tauri-plugin-ios-motion
+      '@tauri-plugin/ios-music':
+        specifier: file:../plugins/tauri-plugin-ios-music
+        version: file:../plugins/tauri-plugin-ios-music
+      '@tauri-plugin/ios-photos':
+        specifier: file:../plugins/tauri-plugin-ios-photos
+        version: file:../plugins/tauri-plugin-ios-photos
+      '@tauri-plugin/ios-proximity':
+        specifier: file:../plugins/tauri-plugin-ios-proximity
+        version: file:../plugins/tauri-plugin-ios-proximity
+      '@tauri-plugin/ios-screentime':
+        specifier: file:../plugins/tauri-plugin-ios-screentime
+        version: file:../plugins/tauri-plugin-ios-screentime
+      '@tauri-plugin/ios-shortcuts':
+        specifier: file:../plugins/tauri-plugin-ios-shortcuts
+        version: file:../plugins/tauri-plugin-ios-shortcuts
+      '@tauri-plugin/ios-widgets':
+        specifier: file:../plugins/tauri-plugin-ios-widgets
+        version: file:../plugins/tauri-plugin-ios-widgets
       solid-js:
         specifier: ^1.9.3
         version: 1.9.7
@@ -459,6 +513,57 @@ packages:
   '@tauri-apps/plugin-opener@2.3.0':
     resolution: {integrity: sha512-yAbauwp8BCHIhhA48NN8rEf6OtfZBPCgTOCa10gmtoVCpmic5Bq+1Ba7C+NZOjogedkSiV7hAotjYnnbUVmYrw==}
 
+  '@tauri-plugin/ios-barometer@file:../plugins/tauri-plugin-ios-barometer':
+    resolution: {directory: ../plugins/tauri-plugin-ios-barometer, type: directory}
+
+  '@tauri-plugin/ios-bluetooth@file:../plugins/tauri-plugin-ios-bluetooth':
+    resolution: {directory: ../plugins/tauri-plugin-ios-bluetooth, type: directory}
+
+  '@tauri-plugin/ios-callkit@file:../plugins/tauri-plugin-ios-callkit':
+    resolution: {directory: ../plugins/tauri-plugin-ios-callkit, type: directory}
+
+  '@tauri-plugin/ios-camera@file:../plugins/tauri-plugin-ios-camera':
+    resolution: {directory: ../plugins/tauri-plugin-ios-camera, type: directory}
+
+  '@tauri-plugin/ios-files@file:../plugins/tauri-plugin-ios-files':
+    resolution: {directory: ../plugins/tauri-plugin-ios-files, type: directory}
+
+  '@tauri-plugin/ios-healthkit@file:../plugins/tauri-plugin-ios-healthkit':
+    resolution: {directory: ../plugins/tauri-plugin-ios-healthkit, type: directory}
+
+  '@tauri-plugin/ios-keychain@file:../plugins/tauri-plugin-ios-keychain':
+    resolution: {directory: ../plugins/tauri-plugin-ios-keychain, type: directory}
+
+  '@tauri-plugin/ios-location@file:../plugins/tauri-plugin-ios-location':
+    resolution: {directory: ../plugins/tauri-plugin-ios-location, type: directory}
+
+  '@tauri-plugin/ios-messages@file:../plugins/tauri-plugin-ios-messages':
+    resolution: {directory: ../plugins/tauri-plugin-ios-messages, type: directory}
+
+  '@tauri-plugin/ios-microphone@file:../plugins/tauri-plugin-ios-microphone':
+    resolution: {directory: ../plugins/tauri-plugin-ios-microphone, type: directory}
+
+  '@tauri-plugin/ios-motion@file:../plugins/tauri-plugin-ios-motion':
+    resolution: {directory: ../plugins/tauri-plugin-ios-motion, type: directory}
+
+  '@tauri-plugin/ios-music@file:../plugins/tauri-plugin-ios-music':
+    resolution: {directory: ../plugins/tauri-plugin-ios-music, type: directory}
+
+  '@tauri-plugin/ios-photos@file:../plugins/tauri-plugin-ios-photos':
+    resolution: {directory: ../plugins/tauri-plugin-ios-photos, type: directory}
+
+  '@tauri-plugin/ios-proximity@file:../plugins/tauri-plugin-ios-proximity':
+    resolution: {directory: ../plugins/tauri-plugin-ios-proximity, type: directory}
+
+  '@tauri-plugin/ios-screentime@file:../plugins/tauri-plugin-ios-screentime':
+    resolution: {directory: ../plugins/tauri-plugin-ios-screentime, type: directory}
+
+  '@tauri-plugin/ios-shortcuts@file:../plugins/tauri-plugin-ios-shortcuts':
+    resolution: {directory: ../plugins/tauri-plugin-ios-shortcuts, type: directory}
+
+  '@tauri-plugin/ios-widgets@file:../plugins/tauri-plugin-ios-widgets':
+    resolution: {directory: ../plugins/tauri-plugin-ios-widgets, type: directory}
+
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
 
@@ -626,6 +731,9 @@ packages:
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
+
+  tauri-plugin-ios-contacts-api@file:../plugins/tauri-plugin-ios-contacts:
+    resolution: {directory: ../plugins/tauri-plugin-ios-contacts, type: directory}
 
   tinyglobby@0.2.14:
     resolution: {integrity: sha512-tX5e7OM1HnYr2+a2C/4V0htOcSQcoSTH9KgJnVvNm5zm/cyEWKJ7j7YutsH9CxMdtOkkLFy2AHrMci9IM8IPZQ==}
@@ -1027,6 +1135,74 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.5.0
 
+  '@tauri-plugin/ios-barometer@file:../plugins/tauri-plugin-ios-barometer':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-bluetooth@file:../plugins/tauri-plugin-ios-bluetooth':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-callkit@file:../plugins/tauri-plugin-ios-callkit':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-camera@file:../plugins/tauri-plugin-ios-camera':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-files@file:../plugins/tauri-plugin-ios-files':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-healthkit@file:../plugins/tauri-plugin-ios-healthkit':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-keychain@file:../plugins/tauri-plugin-ios-keychain':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-location@file:../plugins/tauri-plugin-ios-location':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-messages@file:../plugins/tauri-plugin-ios-messages':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-microphone@file:../plugins/tauri-plugin-ios-microphone':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-motion@file:../plugins/tauri-plugin-ios-motion':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-music@file:../plugins/tauri-plugin-ios-music':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-photos@file:../plugins/tauri-plugin-ios-photos':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-proximity@file:../plugins/tauri-plugin-ios-proximity':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-screentime@file:../plugins/tauri-plugin-ios-screentime':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-shortcuts@file:../plugins/tauri-plugin-ios-shortcuts':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-plugin/ios-widgets@file:../plugins/tauri-plugin-ios-widgets':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
   '@types/babel__core@7.20.5':
     dependencies:
       '@babel/parser': 7.27.5
@@ -1215,6 +1391,10 @@ snapshots:
       - supports-color
 
   source-map-js@1.2.1: {}
+
+  tauri-plugin-ios-contacts-api@file:../plugins/tauri-plugin-ios-contacts:
+    dependencies:
+      '@tauri-apps/api': 2.5.0
 
   tinyglobby@0.2.14:
     dependencies:

@@ -1,6 +1,25 @@
 import { createSignal, For, Show } from "solid-js";
-import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+
+// Import all iOS plugins
+import * as HealthKit from "@tauri-plugin/ios-healthkit";
+import * as Contacts from "@tauri-plugin/ios-contacts";
+import * as Camera from "@tauri-plugin/ios-camera";
+import * as Microphone from "@tauri-plugin/ios-microphone";
+import * as Location from "@tauri-plugin/ios-location";
+import * as Photos from "@tauri-plugin/ios-photos";
+import * as Music from "@tauri-plugin/ios-music";
+import * as Keychain from "@tauri-plugin/ios-keychain";
+import * as ScreenTime from "@tauri-plugin/ios-screentime";
+import * as Files from "@tauri-plugin/ios-files";
+import * as Messages from "@tauri-plugin/ios-messages";
+import * as CallKit from "@tauri-plugin/ios-callkit";
+import * as Bluetooth from "@tauri-plugin/ios-bluetooth";
+import * as Shortcuts from "@tauri-plugin/ios-shortcuts";
+import * as Widgets from "@tauri-plugin/ios-widgets";
+import * as Motion from "@tauri-plugin/ios-motion";
+import * as Barometer from "@tauri-plugin/ios-barometer";
+import * as Proximity from "@tauri-plugin/ios-proximity";
 
 interface TestResult {
   plugin: string;
@@ -24,23 +43,31 @@ function App() {
     const plugin = "HealthKit";
     
     try {
-      await invoke("plugin:ios-healthkit|request_authorization", {
-        read: ["heartRate", "stepCount", "activeEnergyBurned"],
-        write: ["stepCount"]
-      });
-      addResult(plugin, "Request Authorization", true, "Authorization granted");
+      // Check permissions
+      const permStatus = await HealthKit.checkPermissions();
+      addResult(plugin, "Check Permissions", true, `Read: ${JSON.stringify(permStatus.read.steps)}, Write: ${JSON.stringify(permStatus.write.steps)}`);
       
-      try {
-        const heartRate = await invoke("plugin:ios-healthkit|get_latest_quantity_sample", {
-          type: "heartRate"
-        });
-        addResult(plugin, "Read Heart Rate", true, `Heart rate: ${JSON.stringify(heartRate)}`);
-      } catch (e) {
-        addResult(plugin, "Read Heart Rate", false, String(e));
-      }
+      // Request permissions
+      const newPerms = await HealthKit.requestPermissions({
+        read: [HealthKit.HealthKitDataType.Steps, HealthKit.HealthKitDataType.HeartRate],
+        write: [HealthKit.HealthKitDataType.Steps]
+      });
+      addResult(plugin, "Request Permissions", true, "Permissions requested");
+      
+      // Query samples
+      const endDate = new Date().toISOString();
+      const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      
+      const samples = await HealthKit.queryQuantitySamples({
+        dataType: HealthKit.HealthKitDataType.Steps,
+        startDate,
+        endDate,
+        limit: 10
+      });
+      addResult(plugin, "Query Steps", true, `Found ${samples.length} samples`);
       
     } catch (e) {
-      addResult(plugin, "Request Authorization", false, String(e));
+      addResult(plugin, "Test Failed", false, String(e));
     }
   };
 
@@ -49,16 +76,23 @@ function App() {
     const plugin = "Contacts";
     
     try {
-      const status = await invoke("plugin:ios-contacts|check_authorization_status");
-      addResult(plugin, "Check Authorization", true, `Status: ${status}`);
+      // Check permissions
+      const perm = await Contacts.checkPermissions();
+      addResult(plugin, "Check Permissions", true, `Status: ${perm}`);
       
-      if (status !== "authorized") {
-        await invoke("plugin:ios-contacts|request_authorization");
-        addResult(plugin, "Request Authorization", true, "Authorization requested");
+      if (perm !== Contacts.PermissionState.Granted) {
+        const newPerm = await Contacts.requestPermissions();
+        addResult(plugin, "Request Permissions", true, `New status: ${newPerm}`);
       }
       
-      const contacts = await invoke("plugin:ios-contacts|get_all_contacts");
-      addResult(plugin, "Get All Contacts", true, `Found ${(contacts as any[]).length} contacts`);
+      // Get contacts
+      const contactList = await Contacts.getContacts({ limit: 10 });
+      addResult(plugin, "Get Contacts", true, `Found ${contactList.length} contacts`);
+      
+      // Get groups
+      const groups = await Contacts.getGroups();
+      addResult(plugin, "Get Groups", true, `Found ${groups.length} groups`);
+      
     } catch (e) {
       addResult(plugin, "Test Failed", false, String(e));
     }
@@ -69,11 +103,53 @@ function App() {
     const plugin = "Camera";
     
     try {
-      const available = await invoke("plugin:ios-camera|is_camera_available");
-      addResult(plugin, "Check Availability", true, `Camera available: ${available}`);
+      // Check permissions
+      const perms = await Camera.checkPermissions();
+      addResult(plugin, "Check Permissions", true, `Camera: ${perms.camera}, Photos: ${perms.photoLibrary}`);
       
-      const permission = await invoke("plugin:ios-camera|request_camera_permission");
-      addResult(plugin, "Request Permission", true, `Permission: ${permission}`);
+      // Request permissions if needed
+      if (perms.camera !== Camera.PermissionState.Granted) {
+        const newPerms = await Camera.requestPermissions({
+          camera: true,
+          photoLibrary: true
+        });
+        addResult(plugin, "Request Permissions", true, "Permissions requested");
+      }
+      
+      // Get camera info
+      const cameraInfo = await Camera.getCameraInfo();
+      addResult(plugin, "Camera Info", true, `Has front: ${cameraInfo.hasFrontCamera}, Has back: ${cameraInfo.hasBackCamera}`);
+      
+      // Note: Taking photos would open camera UI
+      addResult(plugin, "Camera API", true, "Camera API is available");
+      
+    } catch (e) {
+      addResult(plugin, "Test Failed", false, String(e));
+    }
+  };
+
+  // Microphone Tests
+  const testMicrophone = async () => {
+    const plugin = "Microphone";
+    
+    try {
+      // Check permissions
+      const perm = await Microphone.checkPermissions();
+      addResult(plugin, "Check Permissions", true, `Status: ${perm}`);
+      
+      if (perm !== Microphone.PermissionState.Granted) {
+        const newPerm = await Microphone.requestPermissions();
+        addResult(plugin, "Request Permissions", true, `New status: ${newPerm}`);
+      }
+      
+      // Get available inputs
+      const inputs = await Microphone.getAvailableInputs();
+      addResult(plugin, "Get Inputs", true, `Found ${inputs.length} audio inputs`);
+      
+      // Get recording state
+      const state = await Microphone.getRecordingState();
+      addResult(plugin, "Recording State", true, `State: ${state}`);
+      
     } catch (e) {
       addResult(plugin, "Test Failed", false, String(e));
     }
@@ -84,28 +160,29 @@ function App() {
     const plugin = "Location";
     
     try {
-      const status = await invoke("plugin:ios-location|request_authorization", {
-        precision: "full"
-      });
-      addResult(plugin, "Request Authorization", true, `Status: ${status}`);
+      // Check permissions
+      const perm = await Location.checkPermissions();
+      addResult(plugin, "Check Permissions", true, `Status: ${perm.location}`);
       
-      const location = await invoke("plugin:ios-location|get_current_location");
-      addResult(plugin, "Get Current Location", true, `Location: ${JSON.stringify(location)}`);
-    } catch (e) {
-      addResult(plugin, "Test Failed", false, String(e));
-    }
-  };
-
-  // Music Tests
-  const testMusic = async () => {
-    const plugin = "Music";
-    
-    try {
-      const status = await invoke("plugin:ios-music|get_authorization_status");
-      addResult(plugin, "Check Authorization", true, `Status: ${status}`);
+      if (perm.location !== Location.PermissionState.Granted) {
+        const newPerm = await Location.requestPermissions({
+          precise: true,
+          background: false
+        });
+        addResult(plugin, "Request Permissions", true, `New status: ${newPerm.location}`);
+      }
       
-      const playlists = await invoke("plugin:ios-music|get_playlists");
-      addResult(plugin, "Get Playlists", true, `Found ${(playlists as any[]).length} playlists`);
+      // Get current location
+      try {
+        const loc = await Location.getCurrentLocation({
+          accuracy: Location.LocationAccuracy.Best,
+          timeout: 10000
+        });
+        addResult(plugin, "Get Location", true, `Lat: ${loc.latitude.toFixed(4)}, Lon: ${loc.longitude.toFixed(4)}`);
+      } catch (e) {
+        addResult(plugin, "Get Location", false, "Location unavailable");
+      }
+      
     } catch (e) {
       addResult(plugin, "Test Failed", false, String(e));
     }
@@ -116,15 +193,57 @@ function App() {
     const plugin = "Photos";
     
     try {
-      const status = await invoke("plugin:ios-photos|get_authorization_status");
-      addResult(plugin, "Check Authorization", true, `Status: ${status}`);
+      // Check permissions
+      const perm = await Photos.checkPermissions();
+      addResult(plugin, "Check Permissions", true, `Status: ${perm}`);
       
-      if (status !== "authorized") {
-        await invoke("plugin:ios-photos|request_authorization", {
-          accessLevel: "readWrite"
+      if (perm !== Photos.PermissionState.Authorized) {
+        const newPerm = await Photos.requestPermissions({
+          accessLevel: Photos.PhotoAccessLevel.ReadWrite
         });
-        addResult(plugin, "Request Authorization", true, "Authorization requested");
+        addResult(plugin, "Request Permissions", true, `New status: ${newPerm}`);
       }
+      
+      // Get albums
+      const albums = await Photos.getAlbums({
+        albumType: Photos.AlbumType.User
+      });
+      addResult(plugin, "Get Albums", true, `Found ${albums.length} albums`);
+      
+      // Get assets count
+      const assets = await Photos.getAssets({
+        mediaType: Photos.MediaType.Image,
+        limit: 1
+      });
+      addResult(plugin, "Check Assets", true, assets.length > 0 ? "Photos available" : "No photos");
+      
+    } catch (e) {
+      addResult(plugin, "Test Failed", false, String(e));
+    }
+  };
+
+  // Music Tests
+  const testMusic = async () => {
+    const plugin = "Music";
+    
+    try {
+      // Check permissions
+      const perm = await Music.checkPermissions();
+      addResult(plugin, "Check Permissions", true, `Status: ${perm}`);
+      
+      if (perm !== Music.PermissionState.Authorized) {
+        const newPerm = await Music.requestPermissions();
+        addResult(plugin, "Request Permissions", true, `New status: ${newPerm}`);
+      }
+      
+      // Get playlists
+      const playlists = await Music.getPlaylists({ limit: 10 });
+      addResult(plugin, "Get Playlists", true, `Found ${playlists.length} playlists`);
+      
+      // Get playback state
+      const state = await Music.getPlaybackState();
+      addResult(plugin, "Playback State", true, `State: ${state.playbackState}`);
+      
     } catch (e) {
       addResult(plugin, "Test Failed", false, String(e));
     }
@@ -135,22 +254,205 @@ function App() {
     const plugin = "Keychain";
     
     try {
-      await invoke("plugin:ios-keychain|set_password", {
-        data: {
-          service: "test-app",
-          account: "test-user",
-          password: "test-password-123"
-        }
+      // Set item
+      await Keychain.setItem({
+        key: "test-key",
+        value: "test-value",
+        accessible: Keychain.KeychainAccessible.WhenUnlocked
       });
-      addResult(plugin, "Set Password", true, "Password stored");
+      addResult(plugin, "Set Item", true, "Item stored in keychain");
       
-      const result = await invoke("plugin:ios-keychain|get_password", {
-        query: {
-          service: "test-app",
-          account: "test-user"
-        }
+      // Get item
+      const value = await Keychain.getItem("test-key");
+      addResult(plugin, "Get Item", true, `Retrieved: ${value}`);
+      
+      // Check if item exists
+      const exists = await Keychain.hasItem("test-key");
+      addResult(plugin, "Has Item", true, `Exists: ${exists}`);
+      
+      // Delete item
+      await Keychain.deleteItem("test-key");
+      addResult(plugin, "Delete Item", true, "Item deleted");
+      
+    } catch (e) {
+      addResult(plugin, "Test Failed", false, String(e));
+    }
+  };
+
+  // ScreenTime Tests
+  const testScreenTime = async () => {
+    const plugin = "ScreenTime";
+    
+    try {
+      // Check if available
+      const available = await ScreenTime.isScreenTimeAvailable();
+      addResult(plugin, "Check Availability", true, `Available: ${available}`);
+      
+      if (available) {
+        // Check permissions
+        const perm = await ScreenTime.checkPermissions();
+        addResult(plugin, "Check Permissions", true, `Status: ${perm}`);
+        
+        // Get device activity
+        const endDate = new Date();
+        const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        
+        const activity = await ScreenTime.getDeviceActivity({
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString()
+        });
+        addResult(plugin, "Device Activity", true, `Total screen time: ${activity.totalScreenTime} minutes`);
+      }
+      
+    } catch (e) {
+      addResult(plugin, "Test Failed", false, String(e));
+    }
+  };
+
+  // Files Tests
+  const testFiles = async () => {
+    const plugin = "Files";
+    
+    try {
+      // List documents
+      const docs = await Files.listDocuments();
+      addResult(plugin, "List Documents", true, `Found ${docs.length} documents`);
+      
+      // Get file info for app directory
+      const info = await Files.getFileInfo({
+        path: ".",
+        includeMetadata: true
       });
-      addResult(plugin, "Get Password", true, `Retrieved: ${JSON.stringify(result)}`);
+      addResult(plugin, "File Info", true, `Type: ${info.isDirectory ? "Directory" : "File"}`);
+      
+      // Test write and read
+      const testContent = "Test content from iOS Files plugin";
+      await Files.writeFile({
+        path: "test.txt",
+        content: testContent
+      });
+      addResult(plugin, "Write File", true, "File written successfully");
+      
+      const readContent = await Files.readFile("test.txt");
+      addResult(plugin, "Read File", true, `Content matches: ${readContent === testContent}`);
+      
+    } catch (e) {
+      addResult(plugin, "Test Failed", false, String(e));
+    }
+  };
+
+  // Messages Tests
+  const testMessages = async () => {
+    const plugin = "Messages";
+    
+    try {
+      // Check if can send text
+      const canSend = await Messages.canSendText();
+      addResult(plugin, "Can Send Text", true, `Can send: ${canSend}`);
+      
+      // Check iMessage availability
+      const hasIMessage = await Messages.checkIMessageAvailability();
+      addResult(plugin, "iMessage Available", true, `Available: ${hasIMessage}`);
+      
+      // Note: Actually sending messages would require user interaction
+      addResult(plugin, "Messages API", true, "Messages API is available");
+      
+    } catch (e) {
+      addResult(plugin, "Test Failed", false, String(e));
+    }
+  };
+
+  // CallKit Tests
+  const testCallKit = async () => {
+    const plugin = "CallKit";
+    
+    try {
+      // Check capability
+      const capable = await CallKit.checkCallCapability();
+      addResult(plugin, "Check Capability", true, `VoIP capable: ${capable}`);
+      
+      // Get active calls
+      const calls = await CallKit.getActiveCalls();
+      addResult(plugin, "Active Calls", true, `Active calls: ${calls.length}`);
+      
+      // Get audio routes
+      const routes = await CallKit.getAudioRoutes();
+      addResult(plugin, "Audio Routes", true, `Available routes: ${routes.length}`);
+      
+    } catch (e) {
+      addResult(plugin, "Test Failed", false, String(e));
+    }
+  };
+
+  // Bluetooth Tests
+  const testBluetooth = async () => {
+    const plugin = "Bluetooth";
+    
+    try {
+      // Check if enabled
+      const enabled = await Bluetooth.isBluetoothEnabled();
+      addResult(plugin, "Bluetooth Enabled", true, `Enabled: ${enabled}`);
+      
+      // Get authorization status
+      const auth = await Bluetooth.getAuthorizationStatus();
+      addResult(plugin, "Authorization Status", true, `Status: ${auth}`);
+      
+      if (auth !== Bluetooth.AuthorizationStatus.Authorized) {
+        const newAuth = await Bluetooth.requestAuthorization();
+        addResult(plugin, "Request Authorization", true, `New status: ${newAuth}`);
+      }
+      
+      // Get connected peripherals
+      const connected = await Bluetooth.getConnectedPeripherals();
+      addResult(plugin, "Connected Devices", true, `Connected: ${connected.length}`);
+      
+    } catch (e) {
+      addResult(plugin, "Test Failed", false, String(e));
+    }
+  };
+
+  // Shortcuts Tests
+  const testShortcuts = async () => {
+    const plugin = "Shortcuts";
+    
+    try {
+      // Get all shortcuts
+      const shortcuts = await Shortcuts.getAllShortcuts();
+      addResult(plugin, "Get Shortcuts", true, `Found ${shortcuts.length} shortcuts`);
+      
+      // Create a shortcut
+      await Shortcuts.createShortcut({
+        title: "Test Shortcut",
+        phrase: "Run test shortcut"
+      });
+      addResult(plugin, "Create Shortcut", true, "Shortcut created");
+      
+      // Get voice shortcuts
+      const voiceShortcuts = await Shortcuts.getVoiceShortcuts();
+      addResult(plugin, "Voice Shortcuts", true, `Found ${voiceShortcuts.length} voice shortcuts`);
+      
+    } catch (e) {
+      addResult(plugin, "Test Failed", false, String(e));
+    }
+  };
+
+  // Widgets Tests
+  const testWidgets = async () => {
+    const plugin = "Widgets";
+    
+    try {
+      // Get current widgets
+      const widgets = await Widgets.getCurrentWidgets();
+      addResult(plugin, "Get Widgets", true, `Found ${widgets.length} widgets`);
+      
+      // Reload all timelines
+      await Widgets.reloadAllTimelines();
+      addResult(plugin, "Reload Timelines", true, "All timelines reloaded");
+      
+      // Get widget info
+      const families = await Widgets.getAvailableWidgetFamilies();
+      addResult(plugin, "Widget Families", true, `Available families: ${families.length}`);
+      
     } catch (e) {
       addResult(plugin, "Test Failed", false, String(e));
     }
@@ -161,26 +463,34 @@ function App() {
     const plugin = "Motion";
     
     try {
-      const accelAvailable = await invoke("plugin:ios-motion|is_accelerometer_available");
-      addResult(plugin, "Check Accelerometer", true, `Available: ${accelAvailable}`);
+      // Check accelerometer
+      const accelAvailable = await Motion.isAccelerometerAvailable();
+      addResult(plugin, "Accelerometer Available", true, `Available: ${accelAvailable}`);
       
       if (accelAvailable) {
-        await invoke("plugin:ios-motion|start_accelerometer_updates");
+        // Start updates
+        await Motion.startAccelerometerUpdates({ interval: 0.1 });
         addResult(plugin, "Start Accelerometer", true, "Updates started");
         
-        // Wait a bit then get data
+        // Get data
         setTimeout(async () => {
           try {
-            const data = await invoke("plugin:ios-motion|get_accelerometer_data");
-            addResult(plugin, "Get Accelerometer Data", true, JSON.stringify(data));
+            const data = await Motion.getAccelerometerData();
+            addResult(plugin, "Accelerometer Data", true, `X: ${data.x.toFixed(2)}, Y: ${data.y.toFixed(2)}, Z: ${data.z.toFixed(2)}`);
             
-            await invoke("plugin:ios-motion|stop_accelerometer_updates");
+            // Stop updates
+            await Motion.stopAccelerometerUpdates();
             addResult(plugin, "Stop Accelerometer", true, "Updates stopped");
           } catch (e) {
             addResult(plugin, "Get Data Failed", false, String(e));
           }
         }, 1000);
       }
+      
+      // Check pedometer
+      const pedometerAvailable = await Motion.isPedometerAvailable();
+      addResult(plugin, "Pedometer Available", true, `Available: ${pedometerAvailable}`);
+      
     } catch (e) {
       addResult(plugin, "Test Failed", false, String(e));
     }
@@ -191,13 +501,20 @@ function App() {
     const plugin = "Barometer";
     
     try {
-      const available = await invoke("plugin:ios-barometer|is_barometer_available");
+      // Check availability
+      const available = await Barometer.isBarometerAvailable();
       addResult(plugin, "Check Availability", true, `Available: ${available}`);
       
       if (available) {
-        const pressure = await invoke("plugin:ios-barometer|get_pressure_data");
-        addResult(plugin, "Get Pressure", true, JSON.stringify(pressure));
+        // Get pressure data
+        const pressure = await Barometer.getPressureData();
+        addResult(plugin, "Pressure Data", true, `Pressure: ${pressure.pressure.toFixed(2)} kPa`);
+        
+        // Get weather data
+        const weather = await Barometer.getWeatherData();
+        addResult(plugin, "Weather Data", true, `Temperature: ${weather.temperature?.toFixed(1)}°C, Humidity: ${weather.humidity?.toFixed(0)}%`);
       }
+      
     } catch (e) {
       addResult(plugin, "Test Failed", false, String(e));
     }
@@ -208,16 +525,24 @@ function App() {
     const plugin = "Proximity";
     
     try {
-      const available = await invoke("plugin:ios-proximity|is_proximity_available");
+      // Check availability
+      const available = await Proximity.isProximityAvailable();
       addResult(plugin, "Check Availability", true, `Available: ${available}`);
       
       if (available) {
-        await invoke("plugin:ios-proximity|enable_proximity_monitoring");
+        // Enable monitoring
+        await Proximity.setProximityMonitoringEnabled(true);
         addResult(plugin, "Enable Monitoring", true, "Proximity monitoring enabled");
         
-        const state = await invoke("plugin:ios-proximity|get_proximity_state");
-        addResult(plugin, "Get State", true, JSON.stringify(state));
+        // Get state
+        const state = await Proximity.getProximityState();
+        addResult(plugin, "Proximity State", true, `Near: ${state.isNear}`);
+        
+        // Disable monitoring
+        await Proximity.setProximityMonitoringEnabled(false);
+        addResult(plugin, "Disable Monitoring", true, "Proximity monitoring disabled");
       }
+      
     } catch (e) {
       addResult(plugin, "Test Failed", false, String(e));
     }
@@ -228,16 +553,33 @@ function App() {
     setTesting(true);
     setResults([]);
     
-    await testHealthKit();
-    await testContacts();
-    await testCamera();
-    await testLocation();
-    await testMusic();
-    await testPhotos();
-    await testKeychain();
-    await testMotion();
-    await testBarometer();
-    await testProximity();
+    // Run tests in sequence with small delays
+    const tests = [
+      testHealthKit,
+      testContacts,
+      testCamera,
+      testMicrophone,
+      testLocation,
+      testPhotos,
+      testMusic,
+      testKeychain,
+      testScreenTime,
+      testFiles,
+      testMessages,
+      testCallKit,
+      testBluetooth,
+      testShortcuts,
+      testWidgets,
+      testMotion,
+      testBarometer,
+      testProximity
+    ];
+    
+    for (const test of tests) {
+      await test();
+      // Small delay between tests
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     
     setTesting(false);
   };
@@ -246,10 +588,18 @@ function App() {
     { name: "HealthKit", test: testHealthKit },
     { name: "Contacts", test: testContacts },
     { name: "Camera", test: testCamera },
+    { name: "Microphone", test: testMicrophone },
     { name: "Location", test: testLocation },
-    { name: "Music", test: testMusic },
     { name: "Photos", test: testPhotos },
+    { name: "Music", test: testMusic },
     { name: "Keychain", test: testKeychain },
+    { name: "ScreenTime", test: testScreenTime },
+    { name: "Files", test: testFiles },
+    { name: "Messages", test: testMessages },
+    { name: "CallKit", test: testCallKit },
+    { name: "Bluetooth", test: testBluetooth },
+    { name: "Shortcuts", test: testShortcuts },
+    { name: "Widgets", test: testWidgets },
     { name: "Motion", test: testMotion },
     { name: "Barometer", test: testBarometer },
     { name: "Proximity", test: testProximity }
@@ -260,9 +610,18 @@ function App() {
     return results().filter(r => r.plugin === selectedPlugin());
   };
 
+  const successCount = () => filteredResults().filter(r => r.success).length;
+  const failureCount = () => filteredResults().filter(r => !r.success).length;
+
   return (
     <div class="container">
       <h1>iOS Plugins Test Suite</h1>
+      
+      <div class="stats" style={{ "margin-bottom": "20px", "padding": "15px", "background": "#f0f0f0", "border-radius": "8px" }}>
+        <strong>Results:</strong> {filteredResults().length} total, 
+        <span style={{ "color": "#28a745", "margin": "0 10px" }}>✓ {successCount()} passed</span>
+        <span style={{ "color": "#dc3545" }}>✗ {failureCount()} failed</span>
+      </div>
       
       <div class="controls" style={{ "margin-bottom": "20px" }}>
         <button 
@@ -274,10 +633,29 @@ function App() {
             "border": "none",
             "padding": "10px 20px",
             "border-radius": "5px",
-            "margin-right": "10px"
+            "margin-right": "10px",
+            "cursor": testing() ? "not-allowed" : "pointer",
+            "opacity": testing() ? 0.6 : 1
           }}
         >
           {testing() ? "Testing..." : "Run All Tests"}
+        </button>
+        
+        <button 
+          onClick={() => setResults([])}
+          disabled={testing()}
+          style={{ 
+            "background-color": "#6c757d",
+            "color": "white",
+            "border": "none",
+            "padding": "10px 20px",
+            "border-radius": "5px",
+            "margin-right": "10px",
+            "cursor": testing() ? "not-allowed" : "pointer",
+            "opacity": testing() ? 0.6 : 1
+          }}
+        >
+          Clear Results
         </button>
         
         <select 
@@ -292,12 +670,17 @@ function App() {
         </select>
       </div>
 
-      <div class="plugin-grid" style={{ "display": "grid", "grid-template-columns": "repeat(auto-fill, minmax(200px, 1fr))", "gap": "10px", "margin-bottom": "20px" }}>
+      <div class="plugin-grid" style={{ 
+        "display": "grid", 
+        "grid-template-columns": "repeat(auto-fill, minmax(200px, 1fr))", 
+        "gap": "10px", 
+        "margin-bottom": "20px" 
+      }}>
         <For each={plugins}>
           {(plugin) => (
             <button
               onClick={() => {
-                setResults([]);
+                setSelectedPlugin(plugin.name);
                 plugin.test();
               }}
               disabled={testing()}
@@ -306,7 +689,19 @@ function App() {
                 "border": "1px solid #ddd",
                 "border-radius": "8px",
                 "background": "white",
-                "cursor": "pointer"
+                "cursor": testing() ? "not-allowed" : "pointer",
+                "transition": "all 0.2s",
+                "opacity": testing() ? 0.6 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (!testing()) {
+                  e.currentTarget.style.background = "#f8f9fa";
+                  e.currentTarget.style.borderColor = "#007AFF";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "white";
+                e.currentTarget.style.borderColor = "#ddd";
               }}
             >
               Test {plugin.name}
@@ -315,7 +710,13 @@ function App() {
         </For>
       </div>
 
-      <div class="results" style={{ "max-height": "500px", "overflow-y": "auto", "border": "1px solid #ddd", "border-radius": "8px", "padding": "10px" }}>
+      <div class="results" style={{ 
+        "max-height": "500px", 
+        "overflow-y": "auto", 
+        "border": "1px solid #ddd", 
+        "border-radius": "8px", 
+        "padding": "10px" 
+      }}>
         <h2>Test Results ({filteredResults().length})</h2>
         <Show when={filteredResults().length === 0}>
           <p style={{ "color": "#666" }}>No test results yet. Click a button above to start testing.</p>

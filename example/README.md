@@ -1,22 +1,45 @@
-# iOS Plugins Test App
+# iOS Plugins Test Suite
 
-This is a comprehensive test application for all Tauri iOS plugins. Built with Tauri + Solid + TypeScript.
+This is a comprehensive test application for all 18 Tauri iOS plugins. It provides a user-friendly interface to test each plugin's functionality individually or all at once.
 
 ## Features
 
-- Tests all 18 iOS plugins
-- Desktop fallback testing
-- iOS Simulator support
-- Physical device testing
-- Real-time test results
-- Individual and batch testing
+- **All 18 iOS Plugins Integrated**:
+  - HealthKit - Health and fitness data
+  - Contacts - Address book access
+  - Camera - Photo/video capture
+  - Microphone - Audio recording
+  - Location - GPS and geolocation
+  - Photos - Photo library access
+  - Music - Apple Music integration
+  - Keychain - Secure storage
+  - ScreenTime - App usage tracking
+  - Files - File management
+  - Messages - SMS/iMessage
+  - CallKit - VoIP calling
+  - Bluetooth - BLE connectivity
+  - Shortcuts - Siri Shortcuts
+  - Widgets - Home screen widgets
+  - Motion - Motion sensors
+  - Barometer - Atmospheric pressure
+  - Proximity - Proximity sensor
+
+- **Test Interface**:
+  - Run all tests at once
+  - Test individual plugins
+  - Filter results by plugin
+  - Clear results
+  - Real-time test status with success/failure indicators
+  - Timestamp for each test result
+  - Results counter showing passed/failed tests
 
 ## Prerequisites
 
-- Rust with iOS targets
-- Xcode 14+ (for iOS development)
-- Node.js 16+ and pnpm
-- iOS Simulator or physical iOS device
+- macOS with Xcode installed
+- iOS device or simulator
+- Node.js and pnpm
+- Rust toolchain with iOS targets
+- Tauri CLI v2
 
 ## Setup
 
@@ -30,34 +53,28 @@ pnpm install
 rustup target add aarch64-apple-ios x86_64-apple-ios
 ```
 
-3. Install cargo-mobile2 (for iOS development):
-```bash
-cargo install cargo-mobile2
-```
-
-## Running the App
-
-### Desktop (Development)
-
-Test that plugins properly return "Not supported on desktop" errors:
-
-```bash
-pnpm tauri dev
-```
-
-### iOS Simulator
-
-1. Initialize the iOS project (first time only):
+3. Initialize iOS project (first time only):
 ```bash
 pnpm tauri ios init
 ```
 
-2. Run on iOS simulator:
+## Running the App
+
+### Development Mode (iOS Simulator)
+
+To run in development mode:
 ```bash
 pnpm tauri ios dev
 ```
 
-### Physical iOS Device
+### Building for iOS
+
+To build the iOS app:
+```bash
+pnpm tauri ios build
+```
+
+### Running on Physical Device
 
 1. Connect your iPhone/iPad via USB
 2. Open the Xcode project:
@@ -68,153 +85,151 @@ open src-tauri/gen/apple/example.xcodeproj
 4. Configure signing (requires Apple Developer account)
 5. Build and run (Cmd+R)
 
-## Testing the Plugins
+## Usage
 
-The app provides a comprehensive testing interface:
+1. **Run All Tests**: Click the "Run All Tests" button to execute tests for all 18 plugins sequentially.
 
-### Test Controls
-- **Run All Tests** - Executes tests for all plugins sequentially
-- **Individual Plugin Buttons** - Test specific plugins
-- **Filter Dropdown** - View results by plugin
+2. **Test Individual Plugin**: Click on any plugin button in the grid to test that specific plugin.
 
-### Plugins Included
+3. **Filter Results**: Use the dropdown to filter test results by plugin.
 
-1. **HealthKit** - Health and fitness data
-2. **Contacts** - Address book access
-3. **Camera** - Camera capture
-4. **Microphone** - Audio recording
-5. **Location** - GPS and location services
-6. **Photos** - Photo library
-7. **Music** - Media library
-8. **Keychain** - Secure storage
-9. **ScreenTime** - App usage statistics
-10. **Files** - File system access
-11. **Messages** - SMS/MMS functionality
-12. **CallKit** - VoIP integration
-13. **Bluetooth** - BLE device management
-14. **Shortcuts** - Siri Shortcuts
-15. **Widgets** - Home screen widgets
-16. **Motion** - Accelerometer & gyroscope
-17. **Barometer** - Atmospheric pressure
-18. **Proximity** - Proximity sensor
+4. **Clear Results**: Click "Clear Results" to remove all test results.
 
-## Expected Behavior
+## Test Implementation
 
-### On Desktop
-- All plugin calls return "Not supported on desktop" errors
-- Useful for testing error handling
+Each plugin test follows this pattern:
+1. Check current permissions
+2. Request permissions if needed
+3. Test basic functionality
+4. Report results with meaningful messages
 
-### On iOS Simulator
+Example test flow:
+- ✓ Check Permissions - Status: granted
+- ✓ Query Data - Found 10 items
+- ✗ Write Data - Error: insufficient permissions
+
+## Permissions
+
+The app includes all necessary iOS permission descriptions in the Info.plist:
+- Health data access (read/write)
+- Contacts access
+- Camera and photo library
+- Microphone
+- Location services (when in use & always)
+- Motion sensors
+- Bluetooth
+- Siri integration
+- Face ID
+
+Make sure to grant these permissions when prompted for the tests to work properly.
+
+## Test Results
+
+Each test result shows:
+- Plugin name
+- Test name
+- Success/failure status (✓/✗)
+- Result message
+- Timestamp
+
+Results are color-coded:
+- Green background: Successful test
+- Red background: Failed test
+
+The results counter at the top shows:
+- Total number of tests run
+- Number of passed tests (green)
+- Number of failed tests (red)
+
+## Platform Behavior
+
+### iOS Simulator
 - Most plugins work with limitations:
-  - Camera shows UI but can't capture real photos
+  - Camera shows UI but uses simulated photos
   - Some sensors unavailable (barometer, proximity)
   - Limited health data
   - No real SMS/calling capabilities
 
-### On Physical Device
+### Physical Device
 - Full functionality for all plugins
 - Real sensor data
 - Actual permission dialogs
 - Access to real user data (with permission)
 
-## iOS Permissions
+## Troubleshooting
 
-The app will request permissions as needed. Add these to your `Info.plist` for production apps:
+### Build Errors
 
-```xml
-<key>NSHealthShareUsageDescription</key>
-<string>This app needs access to health data</string>
-<key>NSHealthUpdateUsageDescription</key>
-<string>This app needs to write health data</string>
-<key>NSContactsUsageDescription</key>
-<string>This app needs access to contacts</string>
-<key>NSCameraUsageDescription</key>
-<string>This app needs camera access</string>
-<key>NSMicrophoneUsageDescription</key>
-<string>This app needs microphone access</string>
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>This app needs location access</string>
-<key>NSPhotoLibraryUsageDescription</key>
-<string>This app needs photo library access</string>
-<key>NSAppleMusicUsageDescription</key>
-<string>This app needs music library access</string>
-<key>NSMotionUsageDescription</key>
-<string>This app needs motion sensor access</string>
-<key>NSBluetoothAlwaysUsageDescription</key>
-<string>This app needs Bluetooth access</string>
-```
+If you encounter build errors:
 
-## Debugging
-
-### JavaScript Console
-1. Run on iOS Simulator/Device
-2. Open Safari
-3. Enable Developer menu (Preferences > Advanced)
-4. Go to Develop > [Your Device] > [Your App]
-
-### Native Logs
-View in Xcode console while running the app
-
-### Common Issues
-
-**Build fails**
+1. Clean and rebuild:
 ```bash
-# Clean and rebuild
-cargo clean
-pnpm tauri ios init --reinstall-deps
+pnpm tauri ios build --clean
 ```
 
-**Permission denied**
+2. Ensure all plugins are built:
+```bash
+cd ../plugins
+for plugin in tauri-plugin-ios-*; do
+  echo "Building $plugin"
+  cd "$plugin"
+  pnpm install && pnpm run build
+  cd ..
+done
+```
+
+3. Reset iOS project:
+```bash
+rm -rf src-tauri/gen
+pnpm tauri ios init
+```
+
+### Permission Issues
+
 - Reset app permissions: Settings > General > Reset > Reset Location & Privacy
-- Grant permissions when prompted
+- Delete app and reinstall for fresh permissions
 
-**Plugin not found**
-- Ensure all plugins are added to `Cargo.toml`
-- Check that plugins are registered in `lib.rs`
+### Plugin Not Found
 
-## Development Workflow
+- Verify plugin is in `Cargo.toml` dependencies
+- Check plugin is registered in `src-tauri/src/lib.rs`
+- Ensure plugin has `dist-js` folder with built JavaScript
 
-1. Make changes to plugin code
-2. Run `cargo check` to verify compilation
-3. Test on desktop first (quick iteration)
-4. Test on iOS Simulator
-5. Final testing on physical device
+## Development
 
-## Adding Custom Tests
+The main test logic is in `src/App.tsx`. Each plugin has:
+- Dedicated test function (e.g., `testHealthKit`)
+- Proper error handling
+- Meaningful result messages
+- TypeScript types from plugin packages
 
-Edit `src/App.tsx` to add new test cases:
+To add new tests:
+1. Import the plugin package
+2. Create a test function following existing patterns
+3. Add to the plugins array
+4. Add to the test runner
 
-```typescript
-const testCustom = async () => {
-  const plugin = "HealthKit";
-  try {
-    // Your test code here
-    const result = await invoke("plugin:ios-healthkit|your_command", {
-      // parameters
-    });
-    addResult(plugin, "Custom Test", true, `Result: ${JSON.stringify(result)}`);
-  } catch (e) {
-    addResult(plugin, "Custom Test", false, String(e));
-  }
-};
-```
+## Notes
 
-## Performance Testing
+- Some tests require actual hardware (e.g., barometer, proximity sensor)
+- Some tests may require specific conditions (e.g., Bluetooth devices nearby)
+- Camera and photo picker tests will open system UIs
+- Location tests require location services to be enabled
+- Music tests require Apple Music access
+- ScreenTime tests require Family Sharing or parental controls setup
 
-For performance-sensitive plugins (Motion, Location):
-1. Test with continuous updates
-2. Monitor CPU and battery usage in Xcode
-3. Verify proper cleanup when stopping
+## Performance Considerations
+
+For continuous update plugins (Motion, Location):
+- Tests start updates and stop them after getting data
+- Monitor CPU usage in Xcode when testing
+- Ensure proper cleanup to avoid battery drain
 
 ## Contributing
 
-When adding new plugins:
-1. Follow the existing plugin structure
-2. Add to workspace `Cargo.toml`
-3. Register in example app
-4. Add test cases
-5. Update documentation
-
-## License
-
-This example app is part of the Tauri iOS Plugins project.
+When adding new plugin tests:
+1. Follow the existing test patterns
+2. Include meaningful error messages
+3. Test all permission states
+4. Add appropriate timeout handling
+5. Update this documentation

@@ -14,7 +14,25 @@
   "dependencies": {
     "solid-js": "^1.9.3",
     "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2"
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-plugin/ios-healthkit": "file:../plugins/tauri-plugin-ios-healthkit",
+    "@tauri-plugin/ios-contacts": "file:../plugins/tauri-plugin-ios-contacts",
+    "@tauri-plugin/ios-camera": "file:../plugins/tauri-plugin-ios-camera",
+    "@tauri-plugin/ios-microphone": "file:../plugins/tauri-plugin-ios-microphone",
+    "@tauri-plugin/ios-location": "file:../plugins/tauri-plugin-ios-location",
+    "@tauri-plugin/ios-photos": "file:../plugins/tauri-plugin-ios-photos",
+    "@tauri-plugin/ios-music": "file:../plugins/tauri-plugin-ios-music",
+    "@tauri-plugin/ios-keychain": "file:../plugins/tauri-plugin-ios-keychain",
+    "@tauri-plugin/ios-screentime": "file:../plugins/tauri-plugin-ios-screentime",
+    "@tauri-plugin/ios-files": "file:../plugins/tauri-plugin-ios-files",
+    "@tauri-plugin/ios-messages": "file:../plugins/tauri-plugin-ios-messages",
+    "@tauri-plugin/ios-callkit": "file:../plugins/tauri-plugin-ios-callkit",
+    "@tauri-plugin/ios-bluetooth": "file:../plugins/tauri-plugin-ios-bluetooth",
+    "@tauri-plugin/ios-shortcuts": "file:../plugins/tauri-plugin-ios-shortcuts",
+    "@tauri-plugin/ios-widgets": "file:../plugins/tauri-plugin-ios-widgets",
+    "@tauri-plugin/ios-motion": "file:../plugins/tauri-plugin-ios-motion",
+    "@tauri-plugin/ios-barometer": "file:../plugins/tauri-plugin-ios-barometer",
+    "@tauri-plugin/ios-proximity": "file:../plugins/tauri-plugin-ios-proximity"
   },
   "devDependencies": {
     "typescript": "~5.6.2",

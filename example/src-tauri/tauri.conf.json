@@ -29,6 +29,25 @@
       "signingIdentity": "8WXCDGW78X",
       "hardenedRuntime": true
     },
+    "iOS": {
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "This app needs access to your health data to display fitness information.",
+        "NSHealthUpdateUsageDescription": "This app needs permission to save health data.",
+        "NSContactsUsageDescription": "This app needs access to your contacts to share content with them.",
+        "NSCameraUsageDescription": "This app needs camera access to take photos and videos.",
+        "NSMicrophoneUsageDescription": "This app needs microphone access to record audio.",
+        "NSLocationWhenInUseUsageDescription": "This app needs location access to show your current position.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs location access to track your activity.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select photos.",
+        "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library.",
+        "NSAppleMusicUsageDescription": "This app needs access to your music library to play songs.",
+        "NSMotionUsageDescription": "This app needs motion sensor access to track your activity.",
+        "NSBluetoothAlwaysUsageDescription": "This app needs Bluetooth access to connect to devices.",
+        "NSBluetoothPeripheralUsageDescription": "This app needs Bluetooth access to share data with peripherals.",
+        "NSSiriUsageDescription": "This app needs Siri access to create voice shortcuts.",
+        "NSFaceIDUsageDescription": "This app uses Face ID for secure authentication."
+      }
+    },
     "targets": "all",
     "icon": [
       "icons/32x32.png",

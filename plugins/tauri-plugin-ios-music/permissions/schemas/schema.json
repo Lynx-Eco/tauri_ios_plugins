@@ -499,6 +499,18 @@
           "markdownDescription": "Denies the pause command without any pre-configured scope."
         },
         {
+          "description": "Enables the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ping",
+          "markdownDescription": "Enables the ping command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ping",
+          "markdownDescription": "Denies the ping command without any pre-configured scope."
+        },
+        {
           "description": "Enables the play_item command without any pre-configured scope.",
           "type": "string",
           "const": "allow-play-item",
@@ -629,6 +641,12 @@
           "type": "string",
           "const": "deny-update-playlist",
           "markdownDescription": "Denies the update_playlist command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`",
+          "type": "string",
+          "const": "default",
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`"
         }
       ]
     }

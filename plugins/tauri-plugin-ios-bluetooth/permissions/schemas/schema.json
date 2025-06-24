@@ -427,6 +427,18 @@
           "markdownDescription": "Denies the is_bluetooth_enabled command without any pre-configured scope."
         },
         {
+          "description": "Enables the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ping",
+          "markdownDescription": "Enables the ping command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ping",
+          "markdownDescription": "Denies the ping command without any pre-configured scope."
+        },
+        {
           "description": "Enables the read_characteristic command without any pre-configured scope.",
           "type": "string",
           "const": "allow-read-characteristic",
@@ -617,6 +629,12 @@
           "type": "string",
           "const": "deny-write-descriptor",
           "markdownDescription": "Denies the write_descriptor command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`",
+          "type": "string",
+          "const": "default",
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`"
         }
       ]
     }

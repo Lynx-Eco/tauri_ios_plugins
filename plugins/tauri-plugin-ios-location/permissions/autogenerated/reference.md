@@ -1,3 +1,10 @@
+## Default Permission
+
+Default permissions for the plugin
+
+#### This default permission set includes the following:
+
+- `allow-ping`
 
 ## Permission Table
 
@@ -134,6 +141,32 @@ Enables the get_monitored_regions command without any pre-configured scope.
 <td>
 
 Denies the get_monitored_regions command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`ios-location:allow-ping`
+
+</td>
+<td>
+
+Enables the ping command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`ios-location:deny-ping`
+
+</td>
+<td>
+
+Denies the ping command without any pre-configured scope.
 
 </td>
 </tr>

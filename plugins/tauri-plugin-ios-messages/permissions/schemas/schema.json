@@ -475,6 +475,18 @@
           "markdownDescription": "Denies the mark_as_read command without any pre-configured scope."
         },
         {
+          "description": "Enables the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ping",
+          "markdownDescription": "Enables the ping command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ping",
+          "markdownDescription": "Denies the ping command without any pre-configured scope."
+        },
+        {
           "description": "Enables the register_for_notifications command without any pre-configured scope.",
           "type": "string",
           "const": "allow-register-for-notifications",
@@ -545,6 +557,12 @@
           "type": "string",
           "const": "deny-unregister-notifications",
           "markdownDescription": "Denies the unregister_notifications command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`",
+          "type": "string",
+          "const": "default",
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`"
         }
       ]
     }

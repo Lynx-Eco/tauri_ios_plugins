@@ -5,6 +5,24 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default"
+    "opener:default",
+    "ios-healthkit:default",
+    "ios-contacts:default",
+    "ios-camera:default",
+    "ios-microphone:default",
+    "ios-location:default",
+    "ios-photos:default",
+    "ios-music:default",
+    "ios-keychain:default",
+    "ios-screentime:default",
+    "ios-files:default",
+    "ios-messages:default",
+    "ios-callkit:default",
+    "ios-bluetooth:default",
+    "ios-shortcuts:default",
+    "ios-widgets:default",
+    "ios-motion:default",
+    "ios-barometer:default",
+    "ios-proximity:default"
   ]
 }
