@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-is-bluetooth-enabled"
+description = "Enables the is_bluetooth_enabled command without any pre-configured scope."
+commands.allow = ["is_bluetooth_enabled"]
+
+[[permission]]
+identifier = "deny-is-bluetooth-enabled"
+description = "Denies the is_bluetooth_enabled command without any pre-configured scope."
+commands.deny = ["is_bluetooth_enabled"]

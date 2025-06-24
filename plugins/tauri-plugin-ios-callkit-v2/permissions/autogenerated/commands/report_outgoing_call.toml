@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-report-outgoing-call"
+description = "Enables the report_outgoing_call command without any pre-configured scope."
+commands.allow = ["report_outgoing_call"]
+
+[[permission]]
+identifier = "deny-report-outgoing-call"
+description = "Denies the report_outgoing_call command without any pre-configured scope."
+commands.deny = ["report_outgoing_call"]

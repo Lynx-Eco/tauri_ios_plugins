@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-usage-trends"
+description = "Enables the get_usage_trends command without any pre-configured scope."
+commands.allow = ["get_usage_trends"]
+
+[[permission]]
+identifier = "deny-get-usage-trends"
+description = "Denies the get_usage_trends command without any pre-configured scope."
+commands.deny = ["get_usage_trends"]

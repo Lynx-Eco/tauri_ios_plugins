@@ -93,4 +93,55 @@ impl<R: Runtime> Contacts<R> {
             .run_mobile_plugin("createGroup", CreateGroupArgs { name })
             .map_err(Into::into)
     }
+
+    pub fn update_group(&self, group_id: &str, name: &str) -> Result<ContactGroup> {
+        #[derive(serde::Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct UpdateGroupArgs<'a> {
+            group_id: &'a str,
+            name: &'a str,
+        }
+        
+        self.0
+            .run_mobile_plugin("updateGroup", UpdateGroupArgs { group_id, name })
+            .map_err(Into::into)
+    }
+
+    pub fn delete_group(&self, group_id: &str) -> Result<()> {
+        #[derive(serde::Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct DeleteGroupArgs<'a> {
+            group_id: &'a str,
+        }
+        
+        self.0
+            .run_mobile_plugin("deleteGroup", DeleteGroupArgs { group_id })
+            .map_err(Into::into)
+    }
+
+    pub fn add_contact_to_group(&self, contact_id: &str, group_id: &str) -> Result<()> {
+        #[derive(serde::Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct AddContactToGroupArgs<'a> {
+            contact_id: &'a str,
+            group_id: &'a str,
+        }
+        
+        self.0
+            .run_mobile_plugin("addContactToGroup", AddContactToGroupArgs { contact_id, group_id })
+            .map_err(Into::into)
+    }
+
+    pub fn remove_contact_from_group(&self, contact_id: &str, group_id: &str) -> Result<()> {
+        #[derive(serde::Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct RemoveContactFromGroupArgs<'a> {
+            contact_id: &'a str,
+            group_id: &'a str,
+        }
+        
+        self.0
+            .run_mobile_plugin("removeContactFromGroup", RemoveContactFromGroupArgs { contact_id, group_id })
+            .map_err(Into::into)
+    }
 }

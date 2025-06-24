@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-disconnect-peripheral"
+description = "Enables the disconnect_peripheral command without any pre-configured scope."
+commands.allow = ["disconnect_peripheral"]
+
+[[permission]]
+identifier = "deny-disconnect-peripheral"
+description = "Denies the disconnect_peripheral command without any pre-configured scope."
+commands.deny = ["disconnect_peripheral"]

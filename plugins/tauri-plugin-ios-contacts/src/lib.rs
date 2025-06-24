@@ -72,6 +72,22 @@ impl<R: Runtime> Contacts<R> {
     pub fn create_group(&self, name: &str) -> Result<ContactGroup> {
         self.0.create_group(name)
     }
+
+    pub fn update_group(&self, group_id: &str, name: &str) -> Result<ContactGroup> {
+        self.0.update_group(group_id, name)
+    }
+
+    pub fn delete_group(&self, group_id: &str) -> Result<()> {
+        self.0.delete_group(group_id)
+    }
+
+    pub fn add_contact_to_group(&self, contact_id: &str, group_id: &str) -> Result<()> {
+        self.0.add_contact_to_group(contact_id, group_id)
+    }
+
+    pub fn remove_contact_from_group(&self, contact_id: &str, group_id: &str) -> Result<()> {
+        self.0.remove_contact_from_group(contact_id, group_id)
+    }
 }
 
 /// Initializes the plugin.
@@ -87,6 +103,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::delete_contact,
             commands::get_groups,
             commands::create_group,
+            commands::update_group,
+            commands::delete_group,
+            commands::add_contact_to_group,
+            commands::remove_contact_from_group,
         ])
         .setup(|app, api| {
             #[cfg(mobile)]

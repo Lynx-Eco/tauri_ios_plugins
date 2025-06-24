@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-delete-assets"
+description = "Enables the delete_assets command without any pre-configured scope."
+commands.allow = ["delete_assets"]
+
+[[permission]]
+identifier = "deny-delete-assets"
+description = "Denies the delete_assets command without any pre-configured scope."
+commands.deny = ["delete_assets"]

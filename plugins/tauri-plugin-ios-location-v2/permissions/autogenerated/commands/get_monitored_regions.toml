@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-monitored-regions"
+description = "Enables the get_monitored_regions command without any pre-configured scope."
+commands.allow = ["get_monitored_regions"]
+
+[[permission]]
+identifier = "deny-get-monitored-regions"
+description = "Denies the get_monitored_regions command without any pre-configured scope."
+commands.deny = ["get_monitored_regions"]

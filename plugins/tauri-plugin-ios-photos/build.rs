@@ -11,13 +11,8 @@ const COMMANDS: &[&str] = &[
     "save_image",
     "save_video",
     "export_asset",
-    "get_collections",
-    "create_collection",
-    "get_smart_albums",
-    "search_assets",
     "get_asset_metadata",
-    "update_asset_metadata",
-    "get_live_photo",
+    "search_assets",
 ];
 
 fn main() {

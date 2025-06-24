@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-discover-characteristics"
+description = "Enables the discover_characteristics command without any pre-configured scope."
+commands.allow = ["discover_characteristics"]
+
+[[permission]]
+identifier = "deny-discover-characteristics"
+description = "Denies the discover_characteristics command without any pre-configured scope."
+commands.deny = ["discover_characteristics"]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-pick-multiple-files"
+description = "Enables the pick_multiple_files command without any pre-configured scope."
+commands.allow = ["pick_multiple_files"]
+
+[[permission]]
+identifier = "deny-pick-multiple-files"
+description = "Denies the pick_multiple_files command without any pre-configured scope."
+commands.deny = ["pick_multiple_files"]

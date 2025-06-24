@@ -7,8 +7,6 @@ const COMMANDS: &[&str] = &[
     "pick_video",
     "pick_media",
     "get_camera_info",
-    "set_flash_mode",
-    "switch_camera",
 ];
 
 fn main() {

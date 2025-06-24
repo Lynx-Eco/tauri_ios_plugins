@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-start-peripheral-advertising"
+description = "Enables the start_peripheral_advertising command without any pre-configured scope."
+commands.allow = ["start_peripheral_advertising"]
+
+[[permission]]
+identifier = "deny-start-peripheral-advertising"
+description = "Denies the start_peripheral_advertising command without any pre-configured scope."
+commands.deny = ["start_peripheral_advertising"]

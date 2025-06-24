@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-set-repeat-mode"
+description = "Enables the set_repeat_mode command without any pre-configured scope."
+commands.allow = ["set_repeat_mode"]
+
+[[permission]]
+identifier = "deny-set-repeat-mode"
+description = "Denies the set_repeat_mode command without any pre-configured scope."
+commands.deny = ["set_repeat_mode"]

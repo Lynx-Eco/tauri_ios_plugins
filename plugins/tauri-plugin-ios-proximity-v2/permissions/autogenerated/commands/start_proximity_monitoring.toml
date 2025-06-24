@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-start-proximity-monitoring"
+description = "Enables the start_proximity_monitoring command without any pre-configured scope."
+commands.allow = ["start_proximity_monitoring"]
+
+[[permission]]
+identifier = "deny-start-proximity-monitoring"
+description = "Denies the start_proximity_monitoring command without any pre-configured scope."
+commands.deny = ["start_proximity_monitoring"]

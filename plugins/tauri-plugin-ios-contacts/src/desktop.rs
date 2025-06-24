@@ -49,4 +49,20 @@ impl<R: Runtime> Contacts<R> {
     pub fn create_group(&self, _name: &str) -> Result<ContactGroup> {
         Err(Error::OperationFailed("Not available on desktop".to_string()))
     }
+
+    pub fn update_group(&self, _group_id: &str, _name: &str) -> Result<ContactGroup> {
+        Err(Error::OperationFailed("Not available on desktop".to_string()))
+    }
+
+    pub fn delete_group(&self, _group_id: &str) -> Result<()> {
+        Err(Error::OperationFailed("Not available on desktop".to_string()))
+    }
+
+    pub fn add_contact_to_group(&self, _contact_id: &str, _group_id: &str) -> Result<()> {
+        Err(Error::OperationFailed("Not available on desktop".to_string()))
+    }
+
+    pub fn remove_contact_from_group(&self, _contact_id: &str, _group_id: &str) -> Result<()> {
+        Err(Error::OperationFailed("Not available on desktop".to_string()))
+    }
 }

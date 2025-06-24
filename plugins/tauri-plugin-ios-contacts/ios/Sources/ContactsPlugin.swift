@@ -279,6 +279,140 @@ class ContactsPlugin: Plugin {
         }
     }
     
+    @objc public func updateGroup(_ invoke: Invoke) throws {
+        struct UpdateGroupArgs: Decodable {
+            let groupId: String
+            let name: String
+        }
+        
+        let args = try invoke.parseArgs(UpdateGroupArgs.self)
+        
+        guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+            invoke.reject("Contacts access denied")
+            return
+        }
+        
+        do {
+            let groups = try store.groups(matching: CNGroup.predicateForGroups(withIdentifiers: [args.groupId]))
+            guard let group = groups.first else {
+                invoke.reject("Group not found")
+                return
+            }
+            
+            let mutableGroup = group.mutableCopy() as! CNMutableGroup
+            mutableGroup.name = args.name
+            
+            let saveRequest = CNSaveRequest()
+            saveRequest.update(mutableGroup)
+            
+            try store.execute(saveRequest)
+            invoke.resolve([
+                "id": mutableGroup.identifier,
+                "name": mutableGroup.name,
+                "memberCount": 0
+            ])
+        } catch {
+            invoke.reject("Failed to update group: \(error.localizedDescription)")
+        }
+    }
+    
+    @objc public func deleteGroup(_ invoke: Invoke) throws {
+        struct DeleteGroupArgs: Decodable {
+            let groupId: String
+        }
+        
+        let args = try invoke.parseArgs(DeleteGroupArgs.self)
+        
+        guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+            invoke.reject("Contacts access denied")
+            return
+        }
+        
+        do {
+            let groups = try store.groups(matching: CNGroup.predicateForGroups(withIdentifiers: [args.groupId]))
+            guard let group = groups.first else {
+                invoke.reject("Group not found")
+                return
+            }
+            
+            let mutableGroup = group.mutableCopy() as! CNMutableGroup
+            
+            let saveRequest = CNSaveRequest()
+            saveRequest.delete(mutableGroup)
+            
+            try store.execute(saveRequest)
+            invoke.resolve()
+        } catch {
+            invoke.reject("Failed to delete group: \(error.localizedDescription)")
+        }
+    }
+    
+    @objc public func addContactToGroup(_ invoke: Invoke) throws {
+        struct AddContactToGroupArgs: Decodable {
+            let contactId: String
+            let groupId: String
+        }
+        
+        let args = try invoke.parseArgs(AddContactToGroupArgs.self)
+        
+        guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+            invoke.reject("Contacts access denied")
+            return
+        }
+        
+        do {
+            let groups = try store.groups(matching: CNGroup.predicateForGroups(withIdentifiers: [args.groupId]))
+            guard let group = groups.first else {
+                invoke.reject("Group not found")
+                return
+            }
+            
+            let keysToFetch = [CNContactIdentifierKey as CNKeyDescriptor]
+            let contact = try store.unifiedContact(withIdentifier: args.contactId, keysToFetch: keysToFetch)
+            
+            let saveRequest = CNSaveRequest()
+            saveRequest.addMember(contact, to: group)
+            
+            try store.execute(saveRequest)
+            invoke.resolve()
+        } catch {
+            invoke.reject("Failed to add contact to group: \(error.localizedDescription)")
+        }
+    }
+    
+    @objc public func removeContactFromGroup(_ invoke: Invoke) throws {
+        struct RemoveContactFromGroupArgs: Decodable {
+            let contactId: String
+            let groupId: String
+        }
+        
+        let args = try invoke.parseArgs(RemoveContactFromGroupArgs.self)
+        
+        guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+            invoke.reject("Contacts access denied")
+            return
+        }
+        
+        do {
+            let groups = try store.groups(matching: CNGroup.predicateForGroups(withIdentifiers: [args.groupId]))
+            guard let group = groups.first else {
+                invoke.reject("Group not found")
+                return
+            }
+            
+            let keysToFetch = [CNContactIdentifierKey as CNKeyDescriptor]
+            let contact = try store.unifiedContact(withIdentifier: args.contactId, keysToFetch: keysToFetch)
+            
+            let saveRequest = CNSaveRequest()
+            saveRequest.removeMember(contact, from: group)
+            
+            try store.execute(saveRequest)
+            invoke.resolve()
+        } catch {
+            invoke.reject("Failed to remove contact from group: \(error.localizedDescription)")
+        }
+    }
+    
     // MARK: - Helper Methods
     
     private func defaultKeysToFetch() -> [CNKeyDescriptor] {

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-asset-metadata"
+description = "Enables the get_asset_metadata command without any pre-configured scope."
+commands.allow = ["get_asset_metadata"]
+
+[[permission]]
+identifier = "deny-get-asset-metadata"
+description = "Denies the get_asset_metadata command without any pre-configured scope."
+commands.deny = ["get_asset_metadata"]

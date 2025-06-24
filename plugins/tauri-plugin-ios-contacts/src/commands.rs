@@ -70,3 +70,38 @@ pub(crate) async fn create_group<R: Runtime>(
 ) -> Result<ContactGroup> {
     app.contacts().create_group(&name)
 }
+
+#[command]
+pub(crate) async fn update_group<R: Runtime>(
+    app: AppHandle<R>,
+    group_id: String,
+    name: String,
+) -> Result<ContactGroup> {
+    app.contacts().update_group(&group_id, &name)
+}
+
+#[command]
+pub(crate) async fn delete_group<R: Runtime>(
+    app: AppHandle<R>,
+    group_id: String,
+) -> Result<()> {
+    app.contacts().delete_group(&group_id)
+}
+
+#[command]
+pub(crate) async fn add_contact_to_group<R: Runtime>(
+    app: AppHandle<R>,
+    contact_id: String,
+    group_id: String,
+) -> Result<()> {
+    app.contacts().add_contact_to_group(&contact_id, &group_id)
+}
+
+#[command]
+pub(crate) async fn remove_contact_from_group<R: Runtime>(
+    app: AppHandle<R>,
+    contact_id: String,
+    group_id: String,
+) -> Result<()> {
+    app.contacts().remove_contact_from_group(&contact_id, &group_id)
+}

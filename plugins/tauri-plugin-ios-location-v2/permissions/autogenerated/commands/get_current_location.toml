@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-current-location"
+description = "Enables the get_current_location command without any pre-configured scope."
+commands.allow = ["get_current_location"]
+
+[[permission]]
+identifier = "deny-get-current-location"
+description = "Denies the get_current_location command without any pre-configured scope."
+commands.deny = ["get_current_location"]

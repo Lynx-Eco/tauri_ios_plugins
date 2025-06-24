@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-can-send-subject"
+description = "Enables the can_send_subject command without any pre-configured scope."
+commands.allow = ["can_send_subject"]
+
+[[permission]]
+identifier = "deny-can-send-subject"
+description = "Denies the can_send_subject command without any pre-configured scope."
+commands.deny = ["can_send_subject"]

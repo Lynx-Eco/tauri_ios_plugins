@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-schedule-widget-refresh"
+description = "Enables the schedule_widget_refresh command without any pre-configured scope."
+commands.allow = ["schedule_widget_refresh"]
+
+[[permission]]
+identifier = "deny-schedule-widget-refresh"
+description = "Denies the schedule_widget_refresh command without any pre-configured scope."
+commands.deny = ["schedule_widget_refresh"]

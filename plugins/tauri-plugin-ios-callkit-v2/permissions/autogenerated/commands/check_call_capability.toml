@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-check-call-capability"
+description = "Enables the check_call_capability command without any pre-configured scope."
+commands.allow = ["check_call_capability"]
+
+[[permission]]
+identifier = "deny-check-call-capability"
+description = "Denies the check_call_capability command without any pre-configured scope."
+commands.deny = ["check_call_capability"]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-delete-all-shortcuts"
+description = "Enables the delete_all_shortcuts command without any pre-configured scope."
+commands.allow = ["delete_all_shortcuts"]
+
+[[permission]]
+identifier = "deny-delete-all-shortcuts"
+description = "Denies the delete_all_shortcuts command without any pre-configured scope."
+commands.deny = ["delete_all_shortcuts"]

@@ -1,28 +1,31 @@
+const COMMANDS: &[&str] = &[
+    "request_authorization",
+    "get_screen_time_summary",
+    "get_app_usage",
+    "get_category_usage",
+    "get_web_usage",
+    "get_device_activity",
+    "get_notifications_summary",
+    "get_pickups_summary",
+    "set_app_limit",
+    "get_app_limits",
+    "remove_app_limit",
+    "set_downtime_schedule",
+    "get_downtime_schedule",
+    "remove_downtime_schedule",
+    "block_app",
+    "unblock_app",
+    "get_blocked_apps",
+    "set_communication_safety",
+    "get_communication_safety_settings",
+    "get_screen_distance",
+    "get_usage_trends",
+    "export_usage_report",
+];
+
 fn main() {
-    tauri_plugin::Builder::new(&[
-        "request_authorization",
-        "get_screen_time_summary",
-        "get_app_usage",
-        "get_category_usage",
-        "get_web_usage",
-        "get_device_activity",
-        "get_notifications_summary",
-        "get_pickups_summary",
-        "set_app_limit",
-        "get_app_limits",
-        "remove_app_limit",
-        "set_downtime_schedule",
-        "get_downtime_schedule",
-        "remove_downtime_schedule",
-        "block_app",
-        "unblock_app",
-        "get_blocked_apps",
-        "set_communication_safety",
-        "get_communication_safety_settings",
-        "get_screen_distance",
-        "get_usage_trends",
-        "export_usage_report",
-    ])
-    .ios_path("ios")
-    .build();
+    tauri_plugin::Builder::new(COMMANDS)
+        .android_path("android")
+        .ios_path("ios")
+        .build();
 }
