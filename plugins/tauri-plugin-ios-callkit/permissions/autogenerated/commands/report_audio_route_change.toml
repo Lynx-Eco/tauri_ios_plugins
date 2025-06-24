@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-report-audio-route-change"
+description = "Enables the report_audio_route_change command without any pre-configured scope."
+commands.allow = ["report_audio_route_change"]
+
+[[permission]]
+identifier = "deny-report-audio-route-change"
+description = "Denies the report_audio_route_change command without any pre-configured scope."
+commands.deny = ["report_audio_route_change"]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-stop-heading-updates"
+description = "Enables the stop_heading_updates command without any pre-configured scope."
+commands.allow = ["stop_heading_updates"]
+
+[[permission]]
+identifier = "deny-stop-heading-updates"
+description = "Denies the stop_heading_updates command without any pre-configured scope."
+commands.deny = ["stop_heading_updates"]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-set-on-hold"
+description = "Enables the set_on_hold command without any pre-configured scope."
+commands.allow = ["set_on_hold"]
+
+[[permission]]
+identifier = "deny-set-on-hold"
+description = "Denies the set_on_hold command without any pre-configured scope."
+commands.deny = ["set_on_hold"]

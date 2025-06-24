@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-widget-data"
+description = "Enables the get_widget_data command without any pre-configured scope."
+commands.allow = ["get_widget_data"]
+
+[[permission]]
+identifier = "deny-get-widget-data"
+description = "Denies the get_widget_data command without any pre-configured scope."
+commands.deny = ["get_widget_data"]

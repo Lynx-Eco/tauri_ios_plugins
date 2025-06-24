@@ -1,0 +1,47 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+
+/plugins-workspace
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# iOS/Swift
+.build/
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+.swiftpm/
+
+# Node (for any JavaScript tooling)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+*.profraw
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Build outputs
+dist/
+build/
+
+# Documentation
+docs/_build/
+*.orig

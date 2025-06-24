@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-reverse-geocode"
+description = "Enables the reverse_geocode command without any pre-configured scope."
+commands.allow = ["reverse_geocode"]
+
+[[permission]]
+identifier = "deny-reverse-geocode"
+description = "Denies the reverse_geocode command without any pre-configured scope."
+commands.deny = ["reverse_geocode"]

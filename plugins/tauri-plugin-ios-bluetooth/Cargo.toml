@@ -1,0 +1,28 @@
+[package]
+name = "tauri-plugin-ios-bluetooth"
+links = "tauri-plugin-ios-bluetooth"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Tauri plugin for iOS Bluetooth (Core Bluetooth) functionality"
+repository = "https://github.com/yourusername/tauri-plugin-ios-bluetooth"
+keywords = ["tauri", "plugin", "ios", "bluetooth", "ble"]
+categories = ["api-bindings", "os::macos-apis"]
+
+[dependencies]
+tauri = { version = "2.0.0", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+log = "0.4"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0", features = ["build"] }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+swift-rs = "1.0"
+
+[dev-dependencies]
+tauri = { version = "2.0.0", features = ["test"] }

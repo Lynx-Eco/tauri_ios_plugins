@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-configure-audio-session"
+description = "Enables the configure_audio_session command without any pre-configured scope."
+commands.allow = ["configure_audio_session"]
+
+[[permission]]
+identifier = "deny-configure-audio-session"
+description = "Denies the configure_audio_session command without any pre-configured scope."
+commands.deny = ["configure_audio_session"]

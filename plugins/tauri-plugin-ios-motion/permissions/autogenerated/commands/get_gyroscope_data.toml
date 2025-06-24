@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-gyroscope-data"
+description = "Enables the get_gyroscope_data command without any pre-configured scope."
+commands.allow = ["get_gyroscope_data"]
+
+[[permission]]
+identifier = "deny-get-gyroscope-data"
+description = "Denies the get_gyroscope_data command without any pre-configured scope."
+commands.deny = ["get_gyroscope_data"]

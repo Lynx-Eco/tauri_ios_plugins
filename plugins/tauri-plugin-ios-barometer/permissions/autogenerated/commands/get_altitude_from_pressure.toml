@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-altitude-from-pressure"
+description = "Enables the get_altitude_from_pressure command without any pre-configured scope."
+commands.allow = ["get_altitude_from_pressure"]
+
+[[permission]]
+identifier = "deny-get-altitude-from-pressure"
+description = "Denies the get_altitude_from_pressure command without any pre-configured scope."
+commands.deny = ["get_altitude_from_pressure"]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-available-inputs"
+description = "Enables the get_available_inputs command without any pre-configured scope."
+commands.allow = ["get_available_inputs"]
+
+[[permission]]
+identifier = "deny-get-available-inputs"
+description = "Denies the get_available_inputs command without any pre-configured scope."
+commands.deny = ["get_available_inputs"]

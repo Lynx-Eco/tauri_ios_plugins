@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-remove-downtime-schedule"
+description = "Enables the remove_downtime_schedule command without any pre-configured scope."
+commands.allow = ["remove_downtime_schedule"]
+
+[[permission]]
+identifier = "deny-remove-downtime-schedule"
+description = "Denies the remove_downtime_schedule command without any pre-configured scope."
+commands.deny = ["remove_downtime_schedule"]

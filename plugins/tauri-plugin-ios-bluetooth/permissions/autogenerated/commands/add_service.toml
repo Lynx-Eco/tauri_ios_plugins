@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-add-service"
+description = "Enables the add_service command without any pre-configured scope."
+commands.allow = ["add_service"]
+
+[[permission]]
+identifier = "deny-add-service"
+description = "Denies the add_service command without any pre-configured scope."
+commands.deny = ["add_service"]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-set-shortcut-suggestions"
+description = "Enables the set_shortcut_suggestions command without any pre-configured scope."
+commands.allow = ["set_shortcut_suggestions"]
+
+[[permission]]
+identifier = "deny-set-shortcut-suggestions"
+description = "Denies the set_shortcut_suggestions command without any pre-configured scope."
+commands.deny = ["set_shortcut_suggestions"]

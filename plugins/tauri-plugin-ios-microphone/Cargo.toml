@@ -1,0 +1,26 @@
+[package]
+name = "tauri-plugin-ios-microphone"
+links = "tauri-plugin-ios-microphone"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+description = "Tauri plugin for iOS microphone and audio recording"
+keywords = ["tauri", "plugin", "ios", "microphone", "audio"]
+
+[lib]
+name = "tauri_plugin_ios_microphone"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+tauri = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0", features = ["build"] }

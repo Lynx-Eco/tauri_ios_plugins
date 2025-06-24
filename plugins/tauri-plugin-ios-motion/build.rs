@@ -1,0 +1,39 @@
+const COMMANDS: &[&str] = &[
+    "start_accelerometer_updates",
+    "stop_accelerometer_updates",
+    "get_accelerometer_data",
+    "start_gyroscope_updates",
+    "stop_gyroscope_updates",
+    "get_gyroscope_data",
+    "start_magnetometer_updates",
+    "stop_magnetometer_updates",
+    "get_magnetometer_data",
+    "start_device_motion_updates",
+    "stop_device_motion_updates",
+    "get_device_motion_data",
+    "set_update_interval",
+    "is_accelerometer_available",
+    "is_gyroscope_available",
+    "is_magnetometer_available",
+    "is_device_motion_available",
+    "get_motion_activity",
+    "start_activity_updates",
+    "stop_activity_updates",
+    "query_activity_history",
+    "start_pedometer_updates",
+    "stop_pedometer_updates",
+    "get_pedometer_data",
+    "is_pedometer_available",
+    "is_step_counting_available",
+    "is_distance_available",
+    "is_floor_counting_available",
+    "get_altimeter_data",
+    "start_altimeter_updates",
+    "stop_altimeter_updates",
+    "is_relative_altitude_available",
+];
+
+fn main() {
+    tauri_plugin::Builder::new(COMMANDS)
+        .build();
+}

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-stop-central-scan"
+description = "Enables the stop_central_scan command without any pre-configured scope."
+commands.allow = ["stop_central_scan"]
+
+[[permission]]
+identifier = "deny-stop-central-scan"
+description = "Denies the stop_central_scan command without any pre-configured scope."
+commands.deny = ["stop_central_scan"]

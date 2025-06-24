@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-stop-gyroscope-updates"
+description = "Enables the stop_gyroscope_updates command without any pre-configured scope."
+commands.allow = ["stop_gyroscope_updates"]
+
+[[permission]]
+identifier = "deny-stop-gyroscope-updates"
+description = "Denies the stop_gyroscope_updates command without any pre-configured scope."
+commands.deny = ["stop_gyroscope_updates"]

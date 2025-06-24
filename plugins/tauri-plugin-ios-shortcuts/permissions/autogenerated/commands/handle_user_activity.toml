@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-handle-user-activity"
+description = "Enables the handle_user_activity command without any pre-configured scope."
+commands.allow = ["handle_user_activity"]
+
+[[permission]]
+identifier = "deny-handle-user-activity"
+description = "Denies the handle_user_activity command without any pre-configured scope."
+commands.deny = ["handle_user_activity"]

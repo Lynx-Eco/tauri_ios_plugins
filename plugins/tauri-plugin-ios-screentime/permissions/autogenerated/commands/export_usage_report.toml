@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-export-usage-report"
+description = "Enables the export_usage_report command without any pre-configured scope."
+commands.allow = ["export_usage_report"]
+
+[[permission]]
+identifier = "deny-export-usage-report"
+description = "Denies the export_usage_report command without any pre-configured scope."
+commands.deny = ["export_usage_report"]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-stop-location-updates"
+description = "Enables the stop_location_updates command without any pre-configured scope."
+commands.allow = ["stop_location_updates"]
+
+[[permission]]
+identifier = "deny-stop-location-updates"
+description = "Denies the stop_location_updates command without any pre-configured scope."
+commands.deny = ["stop_location_updates"]

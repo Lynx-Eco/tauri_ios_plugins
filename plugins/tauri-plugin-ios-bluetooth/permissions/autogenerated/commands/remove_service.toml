@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-remove-service"
+description = "Enables the remove_service command without any pre-configured scope."
+commands.allow = ["remove_service"]
+
+[[permission]]
+identifier = "deny-remove-service"
+description = "Denies the remove_service command without any pre-configured scope."
+commands.deny = ["remove_service"]

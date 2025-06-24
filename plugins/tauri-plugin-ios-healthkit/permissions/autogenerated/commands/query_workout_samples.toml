@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-query-workout-samples"
+description = "Enables the query_workout_samples command without any pre-configured scope."
+commands.allow = ["query_workout_samples"]
+
+[[permission]]
+identifier = "deny-query-workout-samples"
+description = "Denies the query_workout_samples command without any pre-configured scope."
+commands.deny = ["query_workout_samples"]

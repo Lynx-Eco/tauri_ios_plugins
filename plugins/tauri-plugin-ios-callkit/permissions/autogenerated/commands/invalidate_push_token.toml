@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-invalidate-push-token"
+description = "Enables the invalidate_push_token command without any pre-configured scope."
+commands.allow = ["invalidate_push_token"]
+
+[[permission]]
+identifier = "deny-invalidate-push-token"
+description = "Denies the invalidate_push_token command without any pre-configured scope."
+commands.deny = ["invalidate_push_token"]

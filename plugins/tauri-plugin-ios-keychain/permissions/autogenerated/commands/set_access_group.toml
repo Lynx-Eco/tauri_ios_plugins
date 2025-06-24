@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-set-access-group"
+description = "Enables the set_access_group command without any pre-configured scope."
+commands.allow = ["set_access_group"]
+
+[[permission]]
+identifier = "deny-set-access-group"
+description = "Denies the set_access_group command without any pre-configured scope."
+commands.deny = ["set_access_group"]

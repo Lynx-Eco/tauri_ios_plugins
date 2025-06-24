@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-web-usage"
+description = "Enables the get_web_usage command without any pre-configured scope."
+commands.allow = ["get_web_usage"]
+
+[[permission]]
+identifier = "deny-get-web-usage"
+description = "Denies the get_web_usage command without any pre-configured scope."
+commands.deny = ["get_web_usage"]

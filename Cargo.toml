@@ -1,0 +1,55 @@
+[workspace]
+resolver = "2"
+members = [
+  # Core System APIs
+  "plugins/tauri-plugin-ios-healthkit",
+  "plugins/tauri-plugin-ios-contacts",
+  "plugins/tauri-plugin-ios-camera",
+  "plugins/tauri-plugin-ios-microphone",
+  "plugins/tauri-plugin-ios-screentime",
+  "plugins/tauri-plugin-ios-location",
+
+  # Media & Storage
+  "plugins/tauri-plugin-ios-photos",
+  "plugins/tauri-plugin-ios-music",
+  "plugins/tauri-plugin-ios-files",
+  "plugins/tauri-plugin-ios-keychain",
+
+  # Communication & Connectivity
+  "plugins/tauri-plugin-ios-messages",
+  "plugins/tauri-plugin-ios-callkit",
+  "plugins/tauri-plugin-ios-bluetooth",
+
+  # System Features
+  "plugins/tauri-plugin-ios-shortcuts",
+  "plugins/tauri-plugin-ios-widgets",
+
+  # Sensors & Motion
+  "plugins/tauri-plugin-ios-motion",
+  "plugins/tauri-plugin-ios-barometer",
+  "plugins/tauri-plugin-ios-proximity",
+
+  # Shared utilities
+  "crates/shared",
+
+  # Example
+  "example/src-tauri",
+
+]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Tauri iOS Plugins Contributors"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tauri-apps/tauri-ios-plugins"
+homepage = "https://tauri.app"
+rust-version = "1.70"
+
+
+[workspace.dependencies]
+tauri = "2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+log = "0.4"

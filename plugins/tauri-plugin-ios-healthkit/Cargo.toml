@@ -1,0 +1,26 @@
+[package]
+name = "tauri-plugin-ios-healthkit"
+links = "tauri-plugin-ios-healthkit"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+description = "Tauri plugin for accessing iOS HealthKit API"
+keywords = ["tauri", "plugin", "ios", "healthkit", "health"]
+
+[lib]
+name = "tauri_plugin_ios_healthkit"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+tauri = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0", features = ["build"] }

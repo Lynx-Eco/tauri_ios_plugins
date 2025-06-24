@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-evict-from-local"
+description = "Enables the evict_from_local command without any pre-configured scope."
+commands.allow = ["evict_from_local"]
+
+[[permission]]
+identifier = "deny-evict-from-local"
+description = "Denies the evict_from_local command without any pre-configured scope."
+commands.deny = ["evict_from_local"]

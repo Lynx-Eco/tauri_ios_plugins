@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-donate-interaction"
+description = "Enables the donate_interaction command without any pre-configured scope."
+commands.allow = ["donate_interaction"]
+
+[[permission]]
+identifier = "deny-donate-interaction"
+description = "Denies the donate_interaction command without any pre-configured scope."
+commands.deny = ["donate_interaction"]

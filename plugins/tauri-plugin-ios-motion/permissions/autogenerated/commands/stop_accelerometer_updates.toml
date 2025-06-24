@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-stop-accelerometer-updates"
+description = "Enables the stop_accelerometer_updates command without any pre-configured scope."
+commands.allow = ["stop_accelerometer_updates"]
+
+[[permission]]
+identifier = "deny-stop-accelerometer-updates"
+description = "Denies the stop_accelerometer_updates command without any pre-configured scope."
+commands.deny = ["stop_accelerometer_updates"]

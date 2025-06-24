@@ -1,0 +1,564 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PermissionFile",
+  "description": "Permission file that can define a default permission, a set of permissions or a list of inlined permissions.",
+  "type": "object",
+  "properties": {
+    "default": {
+      "description": "The default permission set for the plugin",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/DefaultPermission"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "set": {
+      "description": "A list of permissions sets defined",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PermissionSet"
+      }
+    },
+    "permission": {
+      "description": "A list of inlined permissions",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Permission"
+      }
+    }
+  },
+  "definitions": {
+    "DefaultPermission": {
+      "description": "The default permission set of the plugin.\n\nWorks similarly to a permission with the \"default\" identifier.",
+      "type": "object",
+      "required": [
+        "permissions"
+      ],
+      "properties": {
+        "version": {
+          "description": "The version of the permission.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 1.0
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does. Tauri convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "permissions": {
+          "description": "All permissions this set contains.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PermissionSet": {
+      "description": "A set of direct permissions grouped together under a new name.",
+      "type": "object",
+      "required": [
+        "description",
+        "identifier",
+        "permissions"
+      ],
+      "properties": {
+        "identifier": {
+          "description": "A unique identifier for the permission.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does.",
+          "type": "string"
+        },
+        "permissions": {
+          "description": "All permissions this set contains.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PermissionKind"
+          }
+        }
+      }
+    },
+    "Permission": {
+      "description": "Descriptions of explicit privileges of commands.\n\nIt can enable commands to be accessible in the frontend of the application.\n\nIf the scope is defined it can be used to fine grain control the access of individual or multiple commands.",
+      "type": "object",
+      "required": [
+        "identifier"
+      ],
+      "properties": {
+        "version": {
+          "description": "The version of the permission.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 1.0
+        },
+        "identifier": {
+          "description": "A unique identifier for the permission.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does. Tauri internal convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commands": {
+          "description": "Allowed or denied commands when using this permission.",
+          "default": {
+            "allow": [],
+            "deny": []
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/Commands"
+            }
+          ]
+        },
+        "scope": {
+          "description": "Allowed or denied scoped when using this permission.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Scopes"
+            }
+          ]
+        },
+        "platforms": {
+          "description": "Target platforms this permission applies. By default all platforms are affected by this permission.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Target"
+          }
+        }
+      }
+    },
+    "Commands": {
+      "description": "Allowed and denied commands inside a permission.\n\nIf two commands clash inside of `allow` and `deny`, it should be denied by default.",
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Allowed command.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "deny": {
+          "description": "Denied command, which takes priority.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Scopes": {
+      "description": "An argument for fine grained behavior control of Tauri commands.\n\nIt can be of any serde serializable type and is used to allow or prevent certain actions inside a Tauri command. The configured scope is passed to the command and will be enforced by the command implementation.\n\n## Example\n\n```json { \"allow\": [{ \"path\": \"$HOME/**\" }], \"deny\": [{ \"path\": \"$HOME/secret.txt\" }] } ```",
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Data that defines what is allowed by the scope.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        "deny": {
+          "description": "Data that defines what is denied by the scope. This should be prioritized by validation logic.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      }
+    },
+    "Value": {
+      "description": "All supported ACL values.",
+      "anyOf": [
+        {
+          "description": "Represents a null JSON value.",
+          "type": "null"
+        },
+        {
+          "description": "Represents a [`bool`].",
+          "type": "boolean"
+        },
+        {
+          "description": "Represents a valid ACL [`Number`].",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Number"
+            }
+          ]
+        },
+        {
+          "description": "Represents a [`String`].",
+          "type": "string"
+        },
+        {
+          "description": "Represents a list of other [`Value`]s.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        {
+          "description": "Represents a map of [`String`] keys to [`Value`]s.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      ]
+    },
+    "Number": {
+      "description": "A valid ACL number.",
+      "anyOf": [
+        {
+          "description": "Represents an [`i64`].",
+          "type": "integer",
+          "format": "int64"
+        },
+        {
+          "description": "Represents a [`f64`].",
+          "type": "number",
+          "format": "double"
+        }
+      ]
+    },
+    "Target": {
+      "description": "Platform target.",
+      "oneOf": [
+        {
+          "description": "MacOS.",
+          "type": "string",
+          "enum": [
+            "macOS"
+          ]
+        },
+        {
+          "description": "Windows.",
+          "type": "string",
+          "enum": [
+            "windows"
+          ]
+        },
+        {
+          "description": "Linux.",
+          "type": "string",
+          "enum": [
+            "linux"
+          ]
+        },
+        {
+          "description": "Android.",
+          "type": "string",
+          "enum": [
+            "android"
+          ]
+        },
+        {
+          "description": "iOS.",
+          "type": "string",
+          "enum": [
+            "iOS"
+          ]
+        }
+      ]
+    },
+    "PermissionKind": {
+      "type": "string",
+      "oneOf": [
+        {
+          "description": "Enables the block_app command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-block-app",
+          "markdownDescription": "Enables the block_app command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the block_app command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-block-app",
+          "markdownDescription": "Denies the block_app command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the export_usage_report command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-export-usage-report",
+          "markdownDescription": "Enables the export_usage_report command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the export_usage_report command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-export-usage-report",
+          "markdownDescription": "Denies the export_usage_report command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_app_limits command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-app-limits",
+          "markdownDescription": "Enables the get_app_limits command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_app_limits command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-app-limits",
+          "markdownDescription": "Denies the get_app_limits command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_app_usage command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-app-usage",
+          "markdownDescription": "Enables the get_app_usage command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_app_usage command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-app-usage",
+          "markdownDescription": "Denies the get_app_usage command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_blocked_apps command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-blocked-apps",
+          "markdownDescription": "Enables the get_blocked_apps command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_blocked_apps command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-blocked-apps",
+          "markdownDescription": "Denies the get_blocked_apps command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_category_usage command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-category-usage",
+          "markdownDescription": "Enables the get_category_usage command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_category_usage command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-category-usage",
+          "markdownDescription": "Denies the get_category_usage command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_communication_safety_settings command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-communication-safety-settings",
+          "markdownDescription": "Enables the get_communication_safety_settings command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_communication_safety_settings command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-communication-safety-settings",
+          "markdownDescription": "Denies the get_communication_safety_settings command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_device_activity command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-device-activity",
+          "markdownDescription": "Enables the get_device_activity command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_device_activity command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-device-activity",
+          "markdownDescription": "Denies the get_device_activity command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_downtime_schedule command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-downtime-schedule",
+          "markdownDescription": "Enables the get_downtime_schedule command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_downtime_schedule command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-downtime-schedule",
+          "markdownDescription": "Denies the get_downtime_schedule command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_notifications_summary command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-notifications-summary",
+          "markdownDescription": "Enables the get_notifications_summary command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_notifications_summary command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-notifications-summary",
+          "markdownDescription": "Denies the get_notifications_summary command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_pickups_summary command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-pickups-summary",
+          "markdownDescription": "Enables the get_pickups_summary command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_pickups_summary command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-pickups-summary",
+          "markdownDescription": "Denies the get_pickups_summary command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_screen_distance command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-screen-distance",
+          "markdownDescription": "Enables the get_screen_distance command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_screen_distance command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-screen-distance",
+          "markdownDescription": "Denies the get_screen_distance command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_screen_time_summary command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-screen-time-summary",
+          "markdownDescription": "Enables the get_screen_time_summary command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_screen_time_summary command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-screen-time-summary",
+          "markdownDescription": "Denies the get_screen_time_summary command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_usage_trends command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-usage-trends",
+          "markdownDescription": "Enables the get_usage_trends command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_usage_trends command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-usage-trends",
+          "markdownDescription": "Denies the get_usage_trends command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_web_usage command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-web-usage",
+          "markdownDescription": "Enables the get_web_usage command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_web_usage command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-web-usage",
+          "markdownDescription": "Denies the get_web_usage command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the remove_app_limit command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-remove-app-limit",
+          "markdownDescription": "Enables the remove_app_limit command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the remove_app_limit command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-remove-app-limit",
+          "markdownDescription": "Denies the remove_app_limit command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the remove_downtime_schedule command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-remove-downtime-schedule",
+          "markdownDescription": "Enables the remove_downtime_schedule command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the remove_downtime_schedule command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-remove-downtime-schedule",
+          "markdownDescription": "Denies the remove_downtime_schedule command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the request_authorization command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-request-authorization",
+          "markdownDescription": "Enables the request_authorization command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the request_authorization command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-request-authorization",
+          "markdownDescription": "Denies the request_authorization command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_app_limit command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-app-limit",
+          "markdownDescription": "Enables the set_app_limit command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_app_limit command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-app-limit",
+          "markdownDescription": "Denies the set_app_limit command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_communication_safety command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-communication-safety",
+          "markdownDescription": "Enables the set_communication_safety command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_communication_safety command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-communication-safety",
+          "markdownDescription": "Denies the set_communication_safety command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_downtime_schedule command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-downtime-schedule",
+          "markdownDescription": "Enables the set_downtime_schedule command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_downtime_schedule command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-downtime-schedule",
+          "markdownDescription": "Denies the set_downtime_schedule command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the unblock_app command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-unblock-app",
+          "markdownDescription": "Enables the unblock_app command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the unblock_app command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-unblock-app",
+          "markdownDescription": "Denies the unblock_app command without any pre-configured scope."
+        }
+      ]
+    }
+  }
+}

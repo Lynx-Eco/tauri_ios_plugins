@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-update-characteristic-value"
+description = "Enables the update_characteristic_value command without any pre-configured scope."
+commands.allow = ["update_characteristic_value"]
+
+[[permission]]
+identifier = "deny-update-characteristic-value"
+description = "Denies the update_characteristic_value command without any pre-configured scope."
+commands.deny = ["update_characteristic_value"]

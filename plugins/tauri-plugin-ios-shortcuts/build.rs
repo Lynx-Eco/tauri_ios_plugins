@@ -1,0 +1,24 @@
+fn main() {
+    tauri_plugin::Builder::new(&[
+        "donate_interaction",
+        "donate_shortcut",
+        "get_all_shortcuts",
+        "delete_shortcut",
+        "delete_all_shortcuts",
+        "get_voice_shortcuts",
+        "suggest_phrase",
+        "handle_user_activity",
+        "update_shortcut",
+        "get_shortcut_suggestions",
+        "set_shortcut_suggestions",
+        "create_app_intent",
+        "register_app_intents",
+        "handle_intent",
+        "get_donated_intents",
+        "delete_donated_intents",
+        "set_eligible_for_prediction",
+        "get_predictions",
+    ])
+    .ios_path("ios")
+    .build();
+}

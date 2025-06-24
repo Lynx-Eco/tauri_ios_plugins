@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-create-album"
+description = "Enables the create_album command without any pre-configured scope."
+commands.allow = ["create_album"]
+
+[[permission]]
+identifier = "deny-create-album"
+description = "Denies the create_album command without any pre-configured scope."
+commands.deny = ["create_album"]

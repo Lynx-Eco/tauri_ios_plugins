@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-is-relative-altitude-available"
+description = "Enables the is_relative_altitude_available command without any pre-configured scope."
+commands.allow = ["is_relative_altitude_available"]
+
+[[permission]]
+identifier = "deny-is-relative-altitude-available"
+description = "Denies the is_relative_altitude_available command without any pre-configured scope."
+commands.deny = ["is_relative_altitude_available"]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-download-from-cloud"
+description = "Enables the download_from_cloud command without any pre-configured scope."
+commands.allow = ["download_from_cloud"]
+
+[[permission]]
+identifier = "deny-download-from-cloud"
+description = "Denies the download_from_cloud command without any pre-configured scope."
+commands.deny = ["download_from_cloud"]
