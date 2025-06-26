@@ -132,8 +132,7 @@ class MotionPlugin: Plugin {
         }
         
         let queue: OperationQueue = OperationQueue.main
-        motionManager.startAccelerometerUpdates(to: queue) { [weak self]
-            (data: CMAccelerometerData?, error: Swift.Error?) in
+        motionManager.startAccelerometerUpdates(to: queue, withHandler: { [weak self] data, error in
             if let error = error {
                 self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
@@ -147,7 +146,7 @@ class MotionPlugin: Plugin {
                     ])
                 }
             }
-        }
+        })
         
         invoke.resolve()
     }
@@ -173,8 +172,7 @@ class MotionPlugin: Plugin {
         }
         
         let queue: OperationQueue = OperationQueue.main
-        motionManager.startGyroUpdates(to: queue) { [weak self]
-            (data: CMGyroData?, error: Swift.Error?) in
+        motionManager.startGyroUpdates(to: queue, withHandler: { [weak self] data, error in
             if let error = error {
                 self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
@@ -188,7 +186,7 @@ class MotionPlugin: Plugin {
                     ])
                 }
             }
-        }
+        })
         
         invoke.resolve()
     }
@@ -214,8 +212,7 @@ class MotionPlugin: Plugin {
         }
         
         let queue: OperationQueue = OperationQueue.main
-        motionManager.startMagnetometerUpdates(to: queue) { [weak self]
-            (data: CMMagnetometerData?, error: Swift.Error?) in
+        motionManager.startMagnetometerUpdates(to: queue, withHandler: { [weak self] data, error in
             if let error = error {
                 self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
@@ -229,7 +226,7 @@ class MotionPlugin: Plugin {
                     ])
                 }
             }
-        }
+        })
         
         invoke.resolve()
     }
@@ -255,8 +252,7 @@ class MotionPlugin: Plugin {
         }
         
         let queue: OperationQueue = OperationQueue.main
-        motionManager.startDeviceMotionUpdates(to: queue) { [weak self]
-            (data: CMDeviceMotion?, error: Swift.Error?) in
+        motionManager.startDeviceMotionUpdates(to: queue, withHandler: { [weak self] data, error in
             if let error = error {
                 self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
@@ -270,7 +266,7 @@ class MotionPlugin: Plugin {
                     ])
                 }
             }
-        }
+        })
         
         invoke.resolve()
     }
@@ -366,8 +362,7 @@ class MotionPlugin: Plugin {
         }
         
         let queue: OperationQueue = OperationQueue.main
-        activityManager.startActivityUpdates(to: queue) { [weak self]
-            (activity: CMMotionActivity?) in
+        activityManager.startActivityUpdates(to: queue, withHandler: { [weak self] activity in
             if let activity = activity,
                let activityData = self?.motionActivityFromCM(activity) {
                 self?.trigger("motionUpdate", data: [
@@ -375,7 +370,7 @@ class MotionPlugin: Plugin {
                     "data": activityData
                 ])
             }
-        }
+        })
         
         invoke.resolve()
     }
@@ -427,8 +422,7 @@ class MotionPlugin: Plugin {
         }
         
         let startDate = Date()
-        pedometer.startUpdates(from: startDate) { [weak self]
-            (data: CMPedometerData?, error: Swift.Error?) in
+        pedometer.startUpdates(from: startDate, withHandler: { [weak self] data, error in
             if let error = error {
                 self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
@@ -442,7 +436,7 @@ class MotionPlugin: Plugin {
                     ])
                 }
             }
-        }
+        })
         
         invoke.resolve()
     }
@@ -520,8 +514,7 @@ class MotionPlugin: Plugin {
         }
         
         let queue: OperationQueue = OperationQueue.main
-        altimeter.startRelativeAltitudeUpdates(to: queue) { [weak self]
-            (data: CMAltitudeData?, error: Swift.Error?) in
+        altimeter.startRelativeAltitudeUpdates(to: queue, withHandler: { [weak self] data, error in
             self?.altimeter.stopRelativeAltitudeUpdates()
             
             if let error = error {
@@ -539,7 +532,7 @@ class MotionPlugin: Plugin {
             } else {
                 invoke.reject("Failed to process altimeter data")
             }
-        }
+        })
     }
     
     @objc public func startAltimeterUpdates(_ invoke: Invoke) {
@@ -549,8 +542,7 @@ class MotionPlugin: Plugin {
         }
         
         let queue: OperationQueue = OperationQueue.main
-        altimeter.startRelativeAltitudeUpdates(to: queue) { [weak self]
-            (data: CMAltitudeData?, error: Swift.Error?) in
+        altimeter.startRelativeAltitudeUpdates(to: queue, withHandler: { [weak self] data, error in
             if let error = error {
                 self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
@@ -564,7 +556,7 @@ class MotionPlugin: Plugin {
                     ])
                 }
             }
-        }
+        })
         
         invoke.resolve()
     }

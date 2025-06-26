@@ -1,5 +1,6 @@
 import { createSignal, For, Show } from "solid-js";
 import "./App.css";
+import SimpleCameraTest from "./SimpleCameraTest";
 
 // Import all iOS plugins
 import * as HealthKit from "@tauri-plugin/ios-healthkit";
@@ -30,6 +31,7 @@ interface TestResult {
 }
 
 function App() {
+  const [showCameraDemo, setShowCameraDemo] = createSignal(false);
   const [results, setResults] = createSignal<TestResult[]>([]);
   const [testing, setTesting] = createSignal(false);
   const [selectedPlugin, setSelectedPlugin] = createSignal("all");
@@ -117,8 +119,8 @@ function App() {
       }
       
       // Get camera info
-      const cameraInfo = await Camera.getCameraInfo();
-      addResult(plugin, "Camera Info", true, `Has front: ${cameraInfo.hasFrontCamera}, Has back: ${cameraInfo.hasBackCamera}`);
+      const cameraList = await Camera.getCameraInfo();
+      addResult(plugin, "Camera Info", true, `Found ${cameraList.length} cameras`);
       
       // Note: Taking photos would open camera UI
       addResult(plugin, "Camera API", true, "Camera API is available");
@@ -615,7 +617,33 @@ function App() {
 
   return (
     <div class="container">
-      <h1>iOS Plugins Test Suite</h1>
+      <Show when={showCameraDemo()}>
+        <div>
+          <button onClick={() => setShowCameraDemo(false)} style={{ "margin-bottom": "20px" }}>
+            ← Back to Test Suite
+          </button>
+          <SimpleCameraTest />
+        </div>
+      </Show>
+      
+      <Show when={!showCameraDemo()}>
+        <h1>iOS Plugins Test Suite</h1>
+        
+        <button 
+          onClick={() => setShowCameraDemo(true)} 
+          style={{ 
+            "background-color": "#007AFF",
+            "color": "white",
+            "border": "none",
+            "padding": "15px 30px",
+            "border-radius": "8px",
+            "margin-bottom": "20px",
+            "font-size": "16px",
+            "cursor": "pointer"
+          }}
+        >
+          Open Camera Demo →
+        </button>
       
       <div class="stats" style={{ "margin-bottom": "20px", "padding": "15px", "background": "#f0f0f0", "border-radius": "8px" }}>
         <strong>Results:</strong> {filteredResults().length} total, 
@@ -741,6 +769,7 @@ function App() {
           )}
         </For>
       </div>
+      </Show>
     </div>
   );
 }
