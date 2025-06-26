@@ -39,15 +39,15 @@ class ContactsPlugin: Plugin {
         return formatter
     }()
     
-    @objc public func checkPermissions(_ invoke: Invoke) throws {
+    @objc public override func checkPermissions(_ invoke: Invoke) {
         let status = CNContactStore.authorizationStatus(for: .contacts)
         let permissionState = authorizationStatusToPermissionState(status)
         
         invoke.resolve(["contacts": permissionState])
     }
     
-    @objc public func requestPermissions(_ invoke: Invoke) throws {
-        store.requestAccess(for: .contacts) { [weak self] granted, error in
+    @objc public override func requestPermissions(_ invoke: Invoke) {
+        store.requestAccess(for: .contacts) { granted, error in
             if let error = error {
                 invoke.reject(error.localizedDescription)
                 return
@@ -101,7 +101,7 @@ class ContactsPlugin: Plugin {
                     stop.pointee = true
                 }
             }
-            invoke.resolve(contacts)
+            invoke.resolve(["contacts": contacts])
         } catch {
             invoke.reject("Failed to fetch contacts: \(error.localizedDescription)")
         }
@@ -161,8 +161,23 @@ class ContactsPlugin: Plugin {
     }
     
     @objc public func updateContact(_ invoke: Invoke) throws {
-        let contactData = invoke.data as? [String: Any] ?? [:]
-        guard let id = contactData["id"] as? String else {
+        struct UpdateContactArgs: Decodable {
+            let id: String
+            let givenName: String?
+            let familyName: String?
+            let middleName: String?
+            let nickname: String?
+            let prefix: String?
+            let suffix: String?
+            let organization: String?
+            let jobTitle: String?
+            let department: String?
+            let note: String?
+            let birthday: String?
+        }
+        
+        let args = try invoke.parseArgs(UpdateContactArgs.self)
+        guard !args.id.isEmpty else {
             invoke.reject("Contact ID is required")
             return
         }
@@ -174,17 +189,40 @@ class ContactsPlugin: Plugin {
         
         do {
             let keysToFetch = defaultKeysToFetch()
-            let contact = try store.unifiedContact(withIdentifier: id, keysToFetch: keysToFetch)
+            let contact = try store.unifiedContact(withIdentifier: args.id, keysToFetch: keysToFetch)
             let mutableContact = contact.mutableCopy() as! CNMutableContact
             
             // Update contact fields from data
-            if let givenName = contactData["givenName"] as? String {
+            if let givenName = args.givenName {
                 mutableContact.givenName = givenName
             }
-            if let familyName = contactData["familyName"] as? String {
+            if let familyName = args.familyName {
                 mutableContact.familyName = familyName
             }
-            // ... update other fields as needed
+            if let middleName = args.middleName {
+                mutableContact.middleName = middleName
+            }
+            if let nickname = args.nickname {
+                mutableContact.nickname = nickname
+            }
+            if let prefix = args.prefix {
+                mutableContact.namePrefix = prefix
+            }
+            if let suffix = args.suffix {
+                mutableContact.nameSuffix = suffix
+            }
+            if let organization = args.organization {
+                mutableContact.organizationName = organization
+            }
+            if let jobTitle = args.jobTitle {
+                mutableContact.jobTitle = jobTitle
+            }
+            if let department = args.department {
+                mutableContact.departmentName = department
+            }
+            if let note = args.note {
+                mutableContact.note = note
+            }
             
             let saveRequest = CNSaveRequest()
             saveRequest.update(mutableContact)
@@ -243,7 +281,7 @@ class ContactsPlugin: Plugin {
                     "memberCount": 0 // Would need to count members separately
                 ]
             }
-            invoke.resolve(serializedGroups)
+            invoke.resolve(["groups": serializedGroups])
         } catch {
             invoke.reject("Failed to fetch groups: \(error.localizedDescription)")
         }
@@ -577,6 +615,11 @@ class ContactsPlugin: Plugin {
         case .authorized:
             return "granted"
         @unknown default:
+            // This handles .limited on iOS 18+ and any future cases
+            if #available(iOS 18.0, *) {
+                // Check if it's the limited case
+                return "limited"
+            }
             return "denied"
         }
     }

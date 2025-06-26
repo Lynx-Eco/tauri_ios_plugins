@@ -95,4 +95,16 @@ impl<R: Runtime> Location<R> {
             .run_mobile_plugin("getDistance", request)
             .map_err(Into::into)
     }
+
+    pub fn get_monitored_regions(&self) -> Result<Vec<Region>> {
+        self.0
+            .run_mobile_plugin("getMonitoredRegions", ())
+            .map_err(Into::into)
+    }
+
+    pub fn start_significant_location_updates(&self) -> Result<()> {
+        self.0
+            .run_mobile_plugin("startSignificantLocationUpdates", ())
+            .map_err(Into::into)
+    }
 }

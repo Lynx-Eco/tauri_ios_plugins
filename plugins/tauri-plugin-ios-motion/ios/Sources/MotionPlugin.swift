@@ -131,15 +131,17 @@ class MotionPlugin: Plugin {
             return
         }
         
-        motionManager.startAccelerometerUpdates(to: .main) { [weak self] data, error in
+        let queue: OperationQueue = OperationQueue.main
+        motionManager.startAccelerometerUpdates(to: queue) { [weak self]
+            (data: CMAccelerometerData?, error: Swift.Error?) in
             if let error = error {
-                self?.trigger(["eventType": "error", "data": error.localizedDescription])
+                self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
             }
             
             if let data = data {
                 if let accelData = self?.accelerometerDataFromCM(data) {
-                    self?.trigger([
+                    self?.trigger("motionUpdate", data: [
                         "eventType": "accelerometerUpdate",
                         "data": accelData
                     ])
@@ -170,15 +172,17 @@ class MotionPlugin: Plugin {
             return
         }
         
-        motionManager.startGyroUpdates(to: .main) { [weak self] data, error in
+        let queue: OperationQueue = OperationQueue.main
+        motionManager.startGyroUpdates(to: queue) { [weak self]
+            (data: CMGyroData?, error: Swift.Error?) in
             if let error = error {
-                self?.trigger(["eventType": "error", "data": error.localizedDescription])
+                self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
             }
             
             if let data = data {
                 if let gyroData = self?.gyroscopeDataFromCM(data) {
-                    self?.trigger([
+                    self?.trigger("motionUpdate", data: [
                         "eventType": "gyroscopeUpdate",
                         "data": gyroData
                     ])
@@ -209,15 +213,17 @@ class MotionPlugin: Plugin {
             return
         }
         
-        motionManager.startMagnetometerUpdates(to: .main) { [weak self] data, error in
+        let queue: OperationQueue = OperationQueue.main
+        motionManager.startMagnetometerUpdates(to: queue) { [weak self]
+            (data: CMMagnetometerData?, error: Swift.Error?) in
             if let error = error {
-                self?.trigger(["eventType": "error", "data": error.localizedDescription])
+                self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
             }
             
             if let data = data {
                 if let magData = self?.magnetometerDataFromCM(data) {
-                    self?.trigger([
+                    self?.trigger("motionUpdate", data: [
                         "eventType": "magnetometerUpdate",
                         "data": magData
                     ])
@@ -248,15 +254,17 @@ class MotionPlugin: Plugin {
             return
         }
         
-        motionManager.startDeviceMotionUpdates(to: .main) { [weak self] data, error in
+        let queue: OperationQueue = OperationQueue.main
+        motionManager.startDeviceMotionUpdates(to: queue) { [weak self]
+            (data: CMDeviceMotion?, error: Swift.Error?) in
             if let error = error {
-                self?.trigger(["eventType": "error", "data": error.localizedDescription])
+                self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
             }
             
             if let data = data {
                 if let deviceData = self?.deviceMotionDataFromCM(data) {
-                    self?.trigger([
+                    self?.trigger("motionUpdate", data: [
                         "eventType": "deviceMotionUpdate",
                         "data": deviceData
                     ])
@@ -282,7 +290,10 @@ class MotionPlugin: Plugin {
     }
     
     @objc public func setUpdateInterval(_ invoke: Invoke) {
-        guard let intervals = invoke.getObject("intervals", MotionUpdateInterval.self) else {
+        let intervals: MotionUpdateInterval
+        do {
+            intervals = try invoke.parseArgs(MotionUpdateInterval.self)
+        } catch {
             invoke.reject("Invalid update intervals")
             return
         }
@@ -325,9 +336,11 @@ class MotionPlugin: Plugin {
             return
         }
         
+        let queue: OperationQueue = OperationQueue.main
         activityManager.queryActivityStarting(from: Date(timeIntervalSinceNow: -60),
                                                to: Date(),
-                                               to: .main) { [weak self] activities, error in
+                                               to: queue) { [weak self]
+            (activities: [CMMotionActivity]?, error: Swift.Error?) in
             if let error = error {
                 invoke.reject(error.localizedDescription)
                 return
@@ -352,10 +365,12 @@ class MotionPlugin: Plugin {
             return
         }
         
-        activityManager.startActivityUpdates(to: .main) { [weak self] activity in
+        let queue: OperationQueue = OperationQueue.main
+        activityManager.startActivityUpdates(to: queue) { [weak self]
+            (activity: CMMotionActivity?) in
             if let activity = activity,
                let activityData = self?.motionActivityFromCM(activity) {
-                self?.trigger([
+                self?.trigger("motionUpdate", data: [
                     "eventType": "activityUpdate",
                     "data": activityData
                 ])
@@ -371,7 +386,10 @@ class MotionPlugin: Plugin {
     }
     
     @objc public func queryActivityHistory(_ invoke: Invoke) {
-        guard let query = invoke.getObject("query", ActivityQuery.self) else {
+        let query: ActivityQuery
+        do {
+            query = try invoke.parseArgs(ActivityQuery.self)
+        } catch {
             invoke.reject("Invalid query parameters")
             return
         }
@@ -387,9 +405,11 @@ class MotionPlugin: Plugin {
             return
         }
         
+        let queue: OperationQueue = OperationQueue.main
         activityManager.queryActivityStarting(from: startDate,
                                                to: endDate,
-                                               to: .main) { [weak self] activities, error in
+                                               to: queue) { [weak self]
+            (activities: [CMMotionActivity]?, error: Swift.Error?) in
             if let error = error {
                 invoke.reject(error.localizedDescription)
                 return
@@ -406,15 +426,17 @@ class MotionPlugin: Plugin {
             return
         }
         
-        pedometer.startUpdates(from: Date()) { [weak self] data, error in
+        let startDate = Date()
+        pedometer.startUpdates(from: startDate) { [weak self]
+            (data: CMPedometerData?, error: Swift.Error?) in
             if let error = error {
-                self?.trigger(["eventType": "error", "data": error.localizedDescription])
+                self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
             }
             
             if let data = data {
                 if let pedometerData = self?.pedometerDataFromCM(data, endDate: Date()) {
-                    self?.trigger([
+                    self?.trigger("motionUpdate", data: [
                         "eventType": "pedometerUpdate",
                         "data": pedometerData
                     ])
@@ -431,10 +453,21 @@ class MotionPlugin: Plugin {
     }
     
     @objc public func getPedometerData(_ invoke: Invoke) {
-        guard let startDateStr = invoke.getString("startDate"),
-              let endDateStr = invoke.getString("endDate"),
-              let startDate = dateFormatter.date(from: startDateStr),
-              let endDate = dateFormatter.date(from: endDateStr) else {
+        struct PedometerQuery: Codable {
+            let startDate: String
+            let endDate: String
+        }
+        
+        let query: PedometerQuery
+        do {
+            query = try invoke.parseArgs(PedometerQuery.self)
+        } catch {
+            invoke.reject("Invalid query parameters")
+            return
+        }
+        
+        guard let startDate = dateFormatter.date(from: query.startDate),
+              let endDate = dateFormatter.date(from: query.endDate) else {
             invoke.reject("Invalid date format")
             return
         }
@@ -444,7 +477,8 @@ class MotionPlugin: Plugin {
             return
         }
         
-        pedometer.queryPedometerData(from: startDate, to: endDate) { [weak self] data, error in
+        pedometer.queryPedometerData(from: startDate, to: endDate) { [weak self]
+            (data: CMPedometerData?, error: Swift.Error?) in
             if let error = error {
                 invoke.reject(error.localizedDescription)
                 return
@@ -485,7 +519,9 @@ class MotionPlugin: Plugin {
             return
         }
         
-        altimeter.startRelativeAltitudeUpdates(to: .main) { [weak self] data, error in
+        let queue: OperationQueue = OperationQueue.main
+        altimeter.startRelativeAltitudeUpdates(to: queue) { [weak self]
+            (data: CMAltitudeData?, error: Swift.Error?) in
             self?.altimeter.stopRelativeAltitudeUpdates()
             
             if let error = error {
@@ -512,15 +548,17 @@ class MotionPlugin: Plugin {
             return
         }
         
-        altimeter.startRelativeAltitudeUpdates(to: .main) { [weak self] data, error in
+        let queue: OperationQueue = OperationQueue.main
+        altimeter.startRelativeAltitudeUpdates(to: queue) { [weak self]
+            (data: CMAltitudeData?, error: Swift.Error?) in
             if let error = error {
-                self?.trigger(["eventType": "error", "data": error.localizedDescription])
+                self?.trigger("motionError", data: ["eventType": "error", "data": error.localizedDescription])
                 return
             }
             
             if let data = data {
                 if let altimeterData = self?.altimeterDataFromCM(data) {
-                    self?.trigger([
+                    self?.trigger("motionUpdate", data: [
                         "eventType": "altimeterUpdate",
                         "data": altimeterData
                     ])
@@ -560,25 +598,13 @@ class MotionPlugin: Plugin {
     }
     
     private func magnetometerDataFromCM(_ data: CMMagnetometerData) -> MagnetometerData {
-        let accuracy: String
-        switch data.magneticField.accuracy {
-        case .uncalibrated:
-            accuracy = "uncalibrated"
-        case .low:
-            accuracy = "low"
-        case .medium:
-            accuracy = "medium"
-        case .high:
-            accuracy = "high"
-        default:
-            accuracy = "uncalibrated"
-        }
-        
+        // CMMagnetometerData doesn't have accuracy information in the raw magnetometer readings
+        // The accuracy is only available in CMDeviceMotion's calibrated magnetic field
         return MagnetometerData(
             x: data.magneticField.x,
             y: data.magneticField.y,
             z: data.magneticField.z,
-            accuracy: accuracy,
+            accuracy: "unknown",
             timestamp: dateFormatter.string(from: Date(timeIntervalSince1970: data.timestamp))
         )
     }
@@ -626,7 +652,8 @@ class MotionPlugin: Plugin {
         )
         
         var magneticField: CalibratedMagneticField? = nil
-        if let field = data.magneticField {
+        if data.magneticField.accuracy != .uncalibrated {
+            let field = data.magneticField
             let accuracy: String
             switch field.accuracy {
             case .uncalibrated:
@@ -637,7 +664,7 @@ class MotionPlugin: Plugin {
                 accuracy = "medium"
             case .high:
                 accuracy = "high"
-            default:
+            @unknown default:
                 accuracy = "uncalibrated"
             }
             
@@ -701,7 +728,7 @@ class MotionPlugin: Plugin {
         return AltimeterData(
             relativeAltitude: data.relativeAltitude.doubleValue,
             pressure: data.pressure.doubleValue,
-            timestamp: dateFormatter.string(from: Date(timeIntervalSince1970: data.timestamp))
+            timestamp: dateFormatter.string(from: Date())
         )
     }
 }

@@ -119,4 +119,37 @@ impl<R: Runtime> Music<R> {
             .run_mobile_plugin("searchCatalog", query)
             .map_err(Into::into)
     }
+
+    pub fn get_album(&self, id: &str) -> Result<Album> {
+        #[derive(serde::Serialize)]
+        struct GetAlbumArgs<'a> {
+            id: &'a str,
+        }
+        
+        self.0
+            .run_mobile_plugin("getAlbum", GetAlbumArgs { id })
+            .map_err(Into::into)
+    }
+
+    pub fn get_artist(&self, id: &str) -> Result<Artist> {
+        #[derive(serde::Serialize)]
+        struct GetArtistArgs<'a> {
+            id: &'a str,
+        }
+        
+        self.0
+            .run_mobile_plugin("getArtist", GetArtistArgs { id })
+            .map_err(Into::into)
+    }
+
+    pub fn get_song(&self, id: &str) -> Result<Song> {
+        #[derive(serde::Serialize)]
+        struct GetSongArgs<'a> {
+            id: &'a str,
+        }
+        
+        self.0
+            .run_mobile_plugin("getSong", GetSongArgs { id })
+            .map_err(Into::into)
+    }
 }

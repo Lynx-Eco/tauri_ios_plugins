@@ -45,6 +45,34 @@ class BarometerPlugin: Plugin {
         return formatter
     }()
     
+    private func convertToJSObject(_ dict: [String: Any]) -> JSObject {
+        var jsObject: JSObject = [:]
+        for (key, value) in dict {
+            if let str = value as? String {
+                jsObject[key] = str
+            } else if let num = value as? NSNumber {
+                if num == kCFBooleanTrue || num == kCFBooleanFalse {
+                    jsObject[key] = num.boolValue
+                } else {
+                    jsObject[key] = num.doubleValue
+                }
+            } else if let int = value as? Int {
+                jsObject[key] = Double(int)
+            } else if let double = value as? Double {
+                jsObject[key] = double
+            } else if let bool = value as? Bool {
+                jsObject[key] = bool
+            } else if let array = value as? [Any] {
+                jsObject[key] = array
+            } else if let dict = value as? [String: Any] {
+                jsObject[key] = convertToJSObject(dict)
+            } else if value is NSNull {
+                jsObject[key] = nil
+            }
+        }
+        return jsObject
+    }
+    
     @objc public func startPressureUpdates(_ invoke: Invoke) {
         guard CMAltimeter.isRelativeAltitudeAvailable() else {
             invoke.reject("Barometer not available")
@@ -53,17 +81,19 @@ class BarometerPlugin: Plugin {
         
         altimeter.startRelativeAltitudeUpdates(to: .main) { [weak self] data, error in
             if let error = error {
-                self?.trigger(["eventType": "error", "data": error.localizedDescription])
+                let errorData: [String: Any] = ["eventType": "error", "data": error.localizedDescription]
+                self?.trigger("barometerError", data: self?.convertToJSObject(errorData) ?? [:] as JSObject)
                 return
             }
             
             if let data = data {
                 if let pressureData = self?.pressureDataFromCM(data) {
                     self?.updatePressureHistory(data.pressure.doubleValue)
-                    self?.trigger([
+                    let updateData: [String: Any] = [
                         "eventType": "pressureUpdate",
                         "data": pressureData
-                    ])
+                    ]
+                    self?.trigger("pressureUpdate", data: self?.convertToJSObject(updateData) ?? [:] as JSObject)
                 }
             }
         }
@@ -109,10 +139,16 @@ class BarometerPlugin: Plugin {
     }
     
     @objc public func setUpdateInterval(_ invoke: Invoke) {
-        guard let interval = invoke.getDouble("interval") else {
+        struct UpdateIntervalArgs: Decodable {
+            let interval: Double
+        }
+        
+        guard let args = try? invoke.parseArgs(UpdateIntervalArgs.self) else {
             invoke.reject("Invalid interval")
             return
         }
+        
+        let interval = args.interval
         
         if interval < 0.1 || interval > 60.0 {
             invoke.reject("Invalid update interval: \(interval)")
@@ -128,10 +164,16 @@ class BarometerPlugin: Plugin {
     }
     
     @objc public func setReferencePressure(_ invoke: Invoke) {
-        guard let pressure = invoke.getDouble("pressure") else {
+        struct ReferencePressureArgs: Decodable {
+            let pressure: Double
+        }
+        
+        guard let args = try? invoke.parseArgs(ReferencePressureArgs.self) else {
             invoke.reject("Invalid pressure")
             return
         }
+        
+        let pressure = args.pressure
         
         if pressure < 80.0 || pressure > 120.0 {
             invoke.reject("Invalid reference pressure: \(pressure)")
@@ -143,10 +185,16 @@ class BarometerPlugin: Plugin {
     }
     
     @objc public func getAltitudeFromPressure(_ invoke: Invoke) {
-        guard let pressure = invoke.getDouble("pressure") else {
+        struct AltitudeArgs: Decodable {
+            let pressure: Double
+        }
+        
+        guard let args = try? invoke.parseArgs(AltitudeArgs.self) else {
             invoke.reject("Invalid pressure")
             return
         }
+        
+        let pressure = args.pressure
         
         // Calculate altitude using the barometric formula
         let altitude = calculateAltitude(pressure: pressure, referencePressure: referencePressure)
@@ -161,7 +209,8 @@ class BarometerPlugin: Plugin {
         
         altimeter.startRelativeAltitudeUpdates(to: .main) { [weak self] data, error in
             if let error = error {
-                self?.trigger(["eventType": "error", "data": error.localizedDescription])
+                let errorData: [String: Any] = ["eventType": "error", "data": error.localizedDescription]
+                self?.trigger("barometerError", data: self?.convertToJSObject(errorData) ?? [:] as JSObject)
                 return
             }
             
@@ -176,10 +225,11 @@ class BarometerPlugin: Plugin {
                     timestamp: self?.dateFormatter.string(from: Date()) ?? ""
                 )
                 
-                self?.trigger([
+                let updateData: [String: Any] = [
                     "eventType": "altitudeUpdate",
                     "data": altitudeData
-                ])
+                ]
+                self?.trigger("altitudeUpdate", data: self?.convertToJSObject(updateData) ?? [:] as JSObject)
             }
         }
         
@@ -232,10 +282,16 @@ class BarometerPlugin: Plugin {
     }
     
     @objc public func calibrateBarometer(_ invoke: Invoke) {
-        guard let calibration = invoke.getObject("calibration", BarometerCalibration.self) else {
+        struct CalibrationArgs: Decodable {
+            let calibration: BarometerCalibration
+        }
+        
+        guard let args = try? invoke.parseArgs(CalibrationArgs.self) else {
             invoke.reject("Invalid calibration data")
             return
         }
+        
+        let calibration = args.calibration
         
         if calibration.referencePressure < 80.0 || calibration.referencePressure > 120.0 {
             invoke.reject("Invalid reference pressure: \(calibration.referencePressure)")
@@ -244,10 +300,11 @@ class BarometerPlugin: Plugin {
         
         referencePressure = calibration.referencePressure
         
-        trigger([
+        let calibrationData: [String: Any] = [
             "eventType": "calibrationComplete",
             "data": calibration
-        ])
+        ]
+        trigger("calibrationComplete", data: convertToJSObject(calibrationData))
         
         invoke.resolve()
     }
@@ -256,7 +313,7 @@ class BarometerPlugin: Plugin {
     private func pressureDataFromCM(_ data: CMAltitudeData) -> PressureData {
         return PressureData(
             pressure: data.pressure.doubleValue,
-            relativeAltitude: data.relativeAltitude?.doubleValue,
+            relativeAltitude: data.relativeAltitude.doubleValue,
             temperature: nil, // iOS doesn't provide temperature
             timestamp: dateFormatter.string(from: Date())
         )

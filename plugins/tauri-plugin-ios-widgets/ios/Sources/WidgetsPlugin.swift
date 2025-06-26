@@ -5,27 +5,7 @@ import WidgetKit
 struct WidgetConfiguration: Codable {
     let kind: String
     let family: String
-    let intentConfiguration: [String: Any]?
-    
-    enum CodingKeys: String, CodingKey {
-        case kind
-        case family
-        case intentConfiguration
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        kind = try container.decode(String.self, forKey: .kind)
-        family = try container.decode(String.self, forKey: .family)
-        intentConfiguration = try container.decodeIfPresent([String: Any].self, forKey: .intentConfiguration)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(kind, forKey: .kind)
-        try container.encode(family, forKey: .family)
-        try container.encodeIfPresent(intentConfiguration, forKey: .intentConfiguration)
-    }
+    let intentConfiguration: String?
 }
 
 struct WidgetContent: Codable {
@@ -36,35 +16,7 @@ struct WidgetContent: Codable {
     let backgroundImage: String?
     let tintColor: String?
     let font: WidgetFont?
-    let customData: [String: Any]
-    
-    enum CodingKeys: String, CodingKey {
-        case title, subtitle, body, image, backgroundImage, tintColor, font, customData
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        title = try container.decodeIfPresent(String.self, forKey: .title)
-        subtitle = try container.decodeIfPresent(String.self, forKey: .subtitle)
-        body = try container.decodeIfPresent(String.self, forKey: .body)
-        image = try container.decodeIfPresent(String.self, forKey: .image)
-        backgroundImage = try container.decodeIfPresent(String.self, forKey: .backgroundImage)
-        tintColor = try container.decodeIfPresent(String.self, forKey: .tintColor)
-        font = try container.decodeIfPresent(WidgetFont.self, forKey: .font)
-        customData = try container.decode([String: Any].self, forKey: .customData)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(title, forKey: .title)
-        try container.encodeIfPresent(subtitle, forKey: .subtitle)
-        try container.encodeIfPresent(body, forKey: .body)
-        try container.encodeIfPresent(image, forKey: .image)
-        try container.encodeIfPresent(backgroundImage, forKey: .backgroundImage)
-        try container.encodeIfPresent(tintColor, forKey: .tintColor)
-        try container.encodeIfPresent(font, forKey: .font)
-        try container.encode(customData, forKey: .customData)
-    }
+    let customData: [String: String]?
 }
 
 struct WidgetFont: Codable {
@@ -140,18 +92,19 @@ class WidgetsPlugin: Plugin {
     }
     
     @objc public func reloadTimelines(_ invoke: Invoke) {
-        guard let widgetKinds = invoke.getArray("widgetKinds", String.self) else {
-            invoke.reject("Invalid widget kinds")
-            return
-        }
-        
-        if #available(iOS 14.0, *) {
-            widgetKinds.forEach { kind in
-                WidgetCenter.shared.reloadTimelines(ofKind: kind)
+        do {
+            let args = try invoke.parseArgs(ReloadTimelinesArgs.self)
+            
+            if #available(iOS 14.0, *) {
+                args.widgetKinds.forEach { kind in
+                    WidgetCenter.shared.reloadTimelines(ofKind: kind)
+                }
+                invoke.resolve()
+            } else {
+                invoke.reject("Widgets require iOS 14.0 or later")
             }
-            invoke.resolve()
-        } else {
-            invoke.reject("Widgets require iOS 14.0 or later")
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
         }
     }
     
@@ -160,14 +113,14 @@ class WidgetsPlugin: Plugin {
             WidgetCenter.shared.getCurrentConfigurations { result in
                 switch result {
                 case .success(let widgetInfos):
-                    let configurations = widgetInfos.map { info -> [String: Any] in
-                        return [
-                            "kind": info.kind,
-                            "family": self.widgetFamilyToString(info.family),
-                            "intentConfiguration": info.configuration?.description ?? ""
-                        ]
+                    let configurations = widgetInfos.map { info -> WidgetConfiguration in
+                        return WidgetConfiguration(
+                            kind: info.kind,
+                            family: self.widgetFamilyToString(info.family),
+                            intentConfiguration: info.configuration?.description
+                        )
                     }
-                    invoke.resolve(configurations)
+                    invoke.resolve(["configurations": configurations])
                 case .failure(let error):
                     invoke.reject(error.localizedDescription)
                 }
@@ -178,10 +131,9 @@ class WidgetsPlugin: Plugin {
     }
     
     @objc public func setWidgetData(_ invoke: Invoke) {
-        guard let data = invoke.getObject("data", WidgetData.self) else {
-            invoke.reject("Invalid widget data")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(SetWidgetDataArgs.self)
+            let data = args.data
         
         guard let sharedDefaults = sharedDefaults else {
             invoke.reject("Shared container not available")
@@ -203,15 +155,16 @@ class WidgetsPlugin: Plugin {
         } catch {
             invoke.reject("Failed to encode widget data: \(error)")
         }
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
+        }
     }
     
     @objc public func getWidgetData(_ invoke: Invoke) {
-        guard let kind = invoke.getString("kind") else {
-            invoke.reject("Invalid kind")
-            return
-        }
-        
-        let family = invoke.getString("family")
+        do {
+            let args = try invoke.parseArgs(GetWidgetDataArgs.self)
+            let kind = args.kind
+            let family = args.family
         
         guard let sharedDefaults = sharedDefaults else {
             invoke.reject("Shared container not available")
@@ -224,20 +177,22 @@ class WidgetsPlugin: Plugin {
             do {
                 let decoder = JSONDecoder()
                 let widgetData = try decoder.decode(WidgetData.self, from: data)
-                invoke.resolve(widgetData)
+                invoke.resolve(["data": widgetData])
             } catch {
                 invoke.reject("Failed to decode widget data: \(error)")
             }
         } else {
-            invoke.resolve(nil)
+            invoke.resolve()
+        }
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
         }
     }
     
     @objc public func clearWidgetData(_ invoke: Invoke) {
-        guard let kind = invoke.getString("kind") else {
-            invoke.reject("Invalid kind")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(ClearWidgetDataArgs.self)
+            let kind = args.kind
         
         guard let sharedDefaults = sharedDefaults else {
             invoke.reject("Shared container not available")
@@ -256,13 +211,15 @@ class WidgetsPlugin: Plugin {
         }
         
         invoke.resolve()
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
+        }
     }
     
     @objc public func requestWidgetUpdate(_ invoke: Invoke) {
-        guard let kind = invoke.getString("kind") else {
-            invoke.reject("Invalid kind")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(RequestWidgetUpdateArgs.self)
+            let kind = args.kind
         
         if #available(iOS 14.0, *) {
             WidgetCenter.shared.reloadTimelines(ofKind: kind)
@@ -270,13 +227,15 @@ class WidgetsPlugin: Plugin {
         } else {
             invoke.reject("Widgets require iOS 14.0 or later")
         }
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
+        }
     }
     
     @objc public func getWidgetInfo(_ invoke: Invoke) {
-        guard let kind = invoke.getString("kind") else {
-            invoke.reject("Invalid kind")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(GetWidgetInfoArgs.self)
+            let kind = args.kind
         
         // This would normally fetch from widget extension info
         // For now, return mock data
@@ -289,15 +248,17 @@ class WidgetsPlugin: Plugin {
             customIntents: []
         )
         
-        invoke.resolve(info)
+        invoke.resolve(["info": info])
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
+        }
     }
     
     @objc public func setWidgetUrl(_ invoke: Invoke) {
-        guard let kind = invoke.getString("kind"),
-              let url = invoke.getObject("url", WidgetUrl.self) else {
-            invoke.reject("Invalid parameters")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(SetWidgetUrlArgs.self)
+            let kind = args.kind
+            let url = args.url
         
         guard let sharedDefaults = sharedDefaults else {
             invoke.reject("Shared container not available")
@@ -312,13 +273,15 @@ class WidgetsPlugin: Plugin {
         } catch {
             invoke.reject("Failed to encode URL: \(error)")
         }
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
+        }
     }
     
     @objc public func getWidgetUrl(_ invoke: Invoke) {
-        guard let kind = invoke.getString("kind") else {
-            invoke.reject("Invalid kind")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(GetWidgetUrlArgs.self)
+            let kind = args.kind
         
         guard let sharedDefaults = sharedDefaults else {
             invoke.reject("Shared container not available")
@@ -329,20 +292,22 @@ class WidgetsPlugin: Plugin {
             do {
                 let decoder = JSONDecoder()
                 let url = try decoder.decode(WidgetUrl.self, from: data)
-                invoke.resolve(url)
+                invoke.resolve(["url": url])
             } catch {
                 invoke.reject("Failed to decode URL: \(error)")
             }
         } else {
-            invoke.resolve(nil)
+            invoke.resolve()
+        }
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
         }
     }
     
     @objc public func previewWidgetData(_ invoke: Invoke) {
-        guard let data = invoke.getObject("data", WidgetData.self) else {
-            invoke.reject("Invalid widget data")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(PreviewWidgetDataArgs.self)
+            let data = args.data
         
         // Generate preview images for each supported family
         var previews: [WidgetPreview] = []
@@ -359,25 +324,29 @@ class WidgetsPlugin: Plugin {
             previews.append(preview)
         }
         
-        invoke.resolve(previews)
+        invoke.resolve(["previews": previews])
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
+        }
     }
     
     @objc public func getWidgetFamilies(_ invoke: Invoke) {
-        guard let kind = invoke.getString("kind") else {
-            invoke.reject("Invalid kind")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(GetWidgetFamiliesArgs.self)
+            let kind = args.kind
         
         // Return supported families for the widget
         let families = ["systemSmall", "systemMedium", "systemLarge", "systemExtraLarge"]
-        invoke.resolve(families)
+        invoke.resolve(["families": families])
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
+        }
     }
     
     @objc public func scheduleWidgetRefresh(_ invoke: Invoke) {
-        guard let schedule = invoke.getObject("schedule", WidgetRefreshSchedule.self) else {
-            invoke.reject("Invalid schedule")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(ScheduleWidgetRefreshArgs.self)
+            let schedule = args.schedule
         
         // Generate a unique schedule ID
         let scheduleId = UUID().uuidString
@@ -396,17 +365,19 @@ class WidgetsPlugin: Plugin {
             // In a real implementation, this would set up background tasks
             // or notifications to trigger widget updates
             
-            invoke.resolve(scheduleId)
+            invoke.resolve(["scheduleId": scheduleId])
         } catch {
             invoke.reject("Failed to encode schedule: \(error)")
+        }
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
         }
     }
     
     @objc public func cancelWidgetRefresh(_ invoke: Invoke) {
-        guard let scheduleId = invoke.getString("scheduleId") else {
-            invoke.reject("Invalid schedule ID")
-            return
-        }
+        do {
+            let args = try invoke.parseArgs(CancelWidgetRefreshArgs.self)
+            let scheduleId = args.scheduleId
         
         guard let sharedDefaults = sharedDefaults else {
             invoke.reject("Shared container not available")
@@ -418,6 +389,9 @@ class WidgetsPlugin: Plugin {
         // In a real implementation, this would cancel the background tasks
         
         invoke.resolve()
+        } catch {
+            invoke.reject("Invalid arguments: \(error)")
+        }
     }
     
     // Helper method to convert WidgetFamily to string
@@ -460,103 +434,75 @@ class WidgetsPlugin: Plugin {
     }
     
     // Emit widget events
-    private func emitWidgetEvent(type: String, data: Any) {
-        trigger([
-            "eventType": type,
-            "widgetKind": data,
-            "timestamp": dateFormatter.string(from: Date())
-        ])
+    private func emitWidgetEvent(type: String, widgetKind: String) {
+        let event = WidgetEvent(
+            eventType: type,
+            widgetKind: widgetKind,
+            timestamp: dateFormatter.string(from: Date())
+        )
+        trigger("widget:event", data: [
+            "eventType": event.eventType,
+            "widgetKind": event.widgetKind,
+            "timestamp": event.timestamp
+        ] as JSObject)
     }
 }
 
-// Extension to handle dictionary encoding/decoding
-extension KeyedDecodingContainer {
-    func decode(_ type: [String: Any].Type, forKey key: K) throws -> [String: Any] {
-        let container = try self.nestedContainer(keyedBy: JSONCodingKeys.self, forKey: key)
-        return try container.decode(type)
-    }
-    
-    func decode(_ type: [String: Any].Type) throws -> [String: Any] {
-        var dictionary = [String: Any]()
-        
-        for key in allKeys {
-            if let boolValue = try? decode(Bool.self, forKey: key) {
-                dictionary[key.stringValue] = boolValue
-            } else if let stringValue = try? decode(String.self, forKey: key) {
-                dictionary[key.stringValue] = stringValue
-            } else if let intValue = try? decode(Int.self, forKey: key) {
-                dictionary[key.stringValue] = intValue
-            } else if let doubleValue = try? decode(Double.self, forKey: key) {
-                dictionary[key.stringValue] = doubleValue
-            } else if let nestedDictionary = try? decode([String: Any].self, forKey: key) {
-                dictionary[key.stringValue] = nestedDictionary
-            } else if let nestedArray = try? decode([Any].self, forKey: key) {
-                dictionary[key.stringValue] = nestedArray
-            }
-        }
-        return dictionary
-    }
+// Argument structures for parseArgs
+struct ReloadTimelinesArgs: Decodable {
+    let widgetKinds: [String]
 }
 
-extension KeyedEncodingContainer {
-    mutating func encode(_ value: [String: Any], forKey key: K) throws {
-        var container = self.nestedContainer(keyedBy: JSONCodingKeys.self, forKey: key)
-        try container.encode(value)
-    }
-    
-    mutating func encode(_ value: [String: Any]) throws {
-        for (key, val) in value {
-            let key = JSONCodingKeys(stringValue: key)!
-            if let boolValue = val as? Bool {
-                try encode(boolValue, forKey: key as! K)
-            } else if let stringValue = val as? String {
-                try encode(stringValue, forKey: key as! K)
-            } else if let intValue = val as? Int {
-                try encode(intValue, forKey: key as! K)
-            } else if let doubleValue = val as? Double {
-                try encode(doubleValue, forKey: key as! K)
-            } else if let dictValue = val as? [String: Any] {
-                try encode(dictValue, forKey: key as! K)
-            } else if let arrayValue = val as? [Any] {
-                var container = self.nestedUnkeyedContainer(forKey: key as! K)
-                try container.encode(arrayValue)
-            }
-        }
-    }
+struct SetWidgetDataArgs: Decodable {
+    let data: WidgetData
 }
 
-extension UnkeyedEncodingContainer {
-    mutating func encode(_ value: [Any]) throws {
-        for val in value {
-            if let boolValue = val as? Bool {
-                try encode(boolValue)
-            } else if let stringValue = val as? String {
-                try encode(stringValue)
-            } else if let intValue = val as? Int {
-                try encode(intValue)
-            } else if let doubleValue = val as? Double {
-                try encode(doubleValue)
-            } else if let dictValue = val as? [String: Any] {
-                var container = self.nestedContainer(keyedBy: JSONCodingKeys.self)
-                try container.encode(dictValue)
-            } else if let arrayValue = val as? [Any] {
-                var container = self.nestedUnkeyedContainer()
-                try container.encode(arrayValue)
-            }
-        }
-    }
+struct GetWidgetDataArgs: Decodable {
+    let kind: String
+    let family: String?
 }
 
-struct JSONCodingKeys: CodingKey {
-    var stringValue: String
-    init?(stringValue: String) {
-        self.stringValue = stringValue
-    }
-    
-    var intValue: Int?
-    init?(intValue: Int) {
-        return nil
-    }
+struct ClearWidgetDataArgs: Decodable {
+    let kind: String
+}
+
+struct RequestWidgetUpdateArgs: Decodable {
+    let kind: String
+}
+
+struct GetWidgetInfoArgs: Decodable {
+    let kind: String
+}
+
+struct SetWidgetUrlArgs: Decodable {
+    let kind: String
+    let url: WidgetUrl
+}
+
+struct GetWidgetUrlArgs: Decodable {
+    let kind: String
+}
+
+struct PreviewWidgetDataArgs: Decodable {
+    let data: WidgetData
+}
+
+struct GetWidgetFamiliesArgs: Decodable {
+    let kind: String
+}
+
+struct ScheduleWidgetRefreshArgs: Decodable {
+    let schedule: WidgetRefreshSchedule
+}
+
+struct CancelWidgetRefreshArgs: Decodable {
+    let scheduleId: String
+}
+
+struct WidgetEvent: Encodable {
+    let eventType: String
+    let widgetKind: String
+    let timestamp: String
 }
 
 @_cdecl("init_plugin_ios_widgets")

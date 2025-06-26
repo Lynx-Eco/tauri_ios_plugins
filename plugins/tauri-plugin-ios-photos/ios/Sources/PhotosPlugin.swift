@@ -2,6 +2,8 @@ import Tauri
 import Photos
 import PhotosUI
 import UIKit
+import CoreLocation
+import AVFoundation
 
 struct PermissionArgs: Decodable {
     let accessLevel: String
@@ -38,7 +40,8 @@ struct SaveImageData: Decodable {
 struct ImageMetadata: Decodable {
     let creationDate: String?
     let location: LocationData?
-    let exif: [String: Any]?
+    // Note: exif data is not used in SaveImageData parsing
+    // It's only used for metadata export which doesn't require Decodable
 }
 
 struct LocationData: Decodable {
@@ -63,9 +66,19 @@ class PhotosPlugin: Plugin {
         return formatter
     }()
     
-    @objc public func checkPermissions(_ invoke: Invoke) throws {
-        let readWriteStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-        let addOnlyStatus = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+    @objc public override func checkPermissions(_ invoke: Invoke) {
+        let readWriteStatus: PHAuthorizationStatus
+        let addOnlyStatus: PHAuthorizationStatus
+        
+        if #available(iOS 14, *) {
+            readWriteStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+            addOnlyStatus = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        } else {
+            // For iOS < 14, use the standard authorization status
+            let status = PHPhotoLibrary.authorizationStatus()
+            readWriteStatus = status
+            addOnlyStatus = status
+        }
         
         invoke.resolve([
             "readWrite": authorizationStatusToString(readWriteStatus),
@@ -73,25 +86,39 @@ class PhotosPlugin: Plugin {
         ])
     }
     
-    @objc public func requestPermissions(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(PermissionArgs.self)
-        
-        let accessLevel: PHAccessLevel = args.accessLevel == "addOnly" ? .addOnly : .readWrite
-        
-        PHPhotoLibrary.requestAuthorization(for: accessLevel) { [weak self] status in
-            do {
-                try self?.checkPermissions(invoke)
-            } catch {
-                invoke.reject(error.localizedDescription)
+    @objc public override func requestPermissions(_ invoke: Invoke) {
+        do {
+            let args = try invoke.parseArgs(PermissionArgs.self)
+            
+            if #available(iOS 14, *) {
+                let accessLevel: PHAccessLevel = args.accessLevel == "addOnly" ? .addOnly : .readWrite
+                
+                PHPhotoLibrary.requestAuthorization(for: accessLevel) { [weak self] status in
+                    self?.checkPermissions(invoke)
+                }
+            } else {
+                // For iOS < 14, use standard authorization
+                PHPhotoLibrary.requestAuthorization { [weak self] status in
+                    self?.checkPermissions(invoke)
+                }
             }
+        } catch {
+            invoke.reject(error.localizedDescription)
         }
     }
     
     @objc public func getAlbums(_ invoke: Invoke) throws {
         let args = try? invoke.parseArgs(AlbumQuery.self)
         
-        guard PHPhotoLibrary.authorizationStatus() == .authorized ||
-              PHPhotoLibrary.authorizationStatus(for: .readWrite) == .authorized else {
+        let isAuthorized: Bool
+        if #available(iOS 14, *) {
+            isAuthorized = PHPhotoLibrary.authorizationStatus() == .authorized ||
+                          PHPhotoLibrary.authorizationStatus(for: .readWrite) == .authorized
+        } else {
+            isAuthorized = PHPhotoLibrary.authorizationStatus() == .authorized
+        }
+        
+        guard isAuthorized else {
             invoke.reject("Photos library access denied")
             return
         }
@@ -129,7 +156,7 @@ class PhotosPlugin: Plugin {
             albums = albums.filter { ($0["assetCount"] as? Int ?? 0) > 0 }
         }
         
-        invoke.resolve(albums)
+        invoke.resolve(["albums": albums])
     }
     
     @objc public func getAlbum(_ invoke: Invoke) throws {
@@ -190,7 +217,7 @@ class PhotosPlugin: Plugin {
             PHAssetCollectionChangeRequest.deleteAssetCollections([collection] as NSFastEnumeration)
         }) { success, error in
             if success {
-                invoke.resolve()
+                invoke.resolve([:] as [String: Any])
             } else {
                 invoke.reject("Failed to delete album: \(error?.localizedDescription ?? "Unknown error")")
             }
@@ -254,7 +281,7 @@ class PhotosPlugin: Plugin {
             results.append(self.serializeAsset(asset))
         }
         
-        invoke.resolve(results)
+        invoke.resolve(["assets": results])
     }
     
     @objc public func getAsset(_ invoke: Invoke) throws {
@@ -286,7 +313,7 @@ class PhotosPlugin: Plugin {
             PHAssetChangeRequest.deleteAssets(assets)
         }) { success, error in
             if success {
-                invoke.resolve()
+                invoke.resolve([:] as [String: Any])
             } else {
                 invoke.reject("Failed to delete assets: \(error?.localizedDescription ?? "Unknown error")")
             }
@@ -324,15 +351,16 @@ class PhotosPlugin: Plugin {
                 }
                 
                 if let location = metadata.location {
-                    request.location = CLLocation(
+                    let loc = CLLocation(
                         latitude: location.latitude,
                         longitude: location.longitude
                     )
+                    request.location = loc
                 }
             }
         }) { success, error in
             if success, let assetId = assetId {
-                invoke.resolve(assetId)
+                invoke.resolve(["id": assetId] as [String: Any])
             } else {
                 invoke.reject("Failed to save image: \(error?.localizedDescription ?? "Unknown error")")
             }
@@ -363,7 +391,7 @@ class PhotosPlugin: Plugin {
             }
         }) { success, error in
             if success, let assetId = assetId {
-                invoke.resolve(assetId)
+                invoke.resolve(["id": assetId] as [String: Any])
             } else {
                 invoke.reject("Failed to save video: \(error?.localizedDescription ?? "Unknown error")")
             }
@@ -430,8 +458,10 @@ class PhotosPlugin: Plugin {
                 // Camera info
                 if let exif = properties[kCGImagePropertyExifDictionary as String] as? [String: Any] {
                     var cameraInfo: [String: Any] = [:]
-                    cameraInfo["make"] = properties[kCGImagePropertyTIFFDictionary as String] as? [String: Any]?["Make"]
-                    cameraInfo["model"] = properties[kCGImagePropertyTIFFDictionary as String] as? [String: Any]?["Model"]
+                    if let tiffDict = properties[kCGImagePropertyTIFFDictionary as String] as? [String: Any] {
+                        cameraInfo["make"] = tiffDict["Make"]
+                        cameraInfo["model"] = tiffDict["Model"]
+                    }
                     cameraInfo["lensMake"] = exif["LensMake"]
                     cameraInfo["lensModel"] = exif["LensModel"]
                     metadata["takenWith"] = cameraInfo
@@ -489,8 +519,8 @@ class PhotosPlugin: Plugin {
             "id": collection.localIdentifier,
             "title": collection.localizedTitle ?? "",
             "assetCount": assets.count,
-            "startDate": startDate != nil ? dateFormatter.string(from: startDate!) : nil,
-            "endDate": endDate != nil ? dateFormatter.string(from: endDate!) : nil,
+            "startDate": startDate != nil ? dateFormatter.string(from: startDate!) : NSNull(),
+            "endDate": endDate != nil ? dateFormatter.string(from: endDate!) : NSNull(),
             "albumType": albumTypeToString(collection),
             "canAddAssets": collection.canPerform(.addContent),
             "canRemoveAssets": collection.canPerform(.removeContent),
@@ -510,7 +540,7 @@ class PhotosPlugin: Plugin {
             "height": asset.pixelHeight,
             "isFavorite": asset.isFavorite,
             "isHidden": asset.isHidden,
-            "burstIdentifier": asset.burstIdentifier,
+            "burstIdentifier": asset.burstIdentifier ?? NSNull(),
             "representsBurst": asset.representsBurst
         ]
         
@@ -576,7 +606,7 @@ class PhotosPlugin: Plugin {
             
             do {
                 try data.write(to: tempURL)
-                invoke.resolve(tempURL.path)
+                invoke.resolve(["path": tempURL.path] as [String: Any])
             } catch {
                 invoke.reject("Failed to save exported image: \(error.localizedDescription)")
             }
@@ -600,7 +630,7 @@ class PhotosPlugin: Plugin {
             
             do {
                 try FileManager.default.copyItem(at: urlAsset.url, to: tempURL)
-                invoke.resolve(tempURL.path)
+                invoke.resolve(["path": tempURL.path] as [String: Any])
             } catch {
                 invoke.reject("Failed to export video: \(error.localizedDescription)")
             }
@@ -690,14 +720,17 @@ class PhotosPlugin: Plugin {
         if subtypes.contains(.videoTimelapse) {
             result.append("videoTimelapse")
         }
-        if #available(iOS 14.0, *) {
+        if #available(iOS 15.0, *) {
             if subtypes.contains(.videoCinematic) {
                 result.append("videoCinematic")
             }
         }
-        if subtypes.contains(.videoSloMo) {
-            result.append("videoSloMo")
-        }
+        // videoSloMo is not available in current SDK
+        // if #available(iOS 17.2, *) {
+        //     if subtypes.contains(.videoSloMo) {
+        //         result.append("videoSloMo")
+        //     }
+        // }
         
         return result
     }

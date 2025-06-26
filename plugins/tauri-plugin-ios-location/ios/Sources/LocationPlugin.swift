@@ -2,6 +2,7 @@ import Tauri
 import WebKit
 import CoreLocation
 import MapKit
+import Contacts
 
 struct PermissionRequest: Decodable {
     let accuracy: String?
@@ -49,10 +50,15 @@ class LocationPlugin: Plugin {
         locationManager.delegate = self
     }
     
-    @objc public func checkPermissions(_ invoke: Invoke) throws {
-        let authStatus = locationManager.authorizationStatus
-        let whenInUse = authorizationStatusToString(authStatus, for: .whenInUse)
-        let always = authorizationStatusToString(authStatus, for: .always)
+    @objc public override func checkPermissions(_ invoke: Invoke) {
+        let authStatus: CLAuthorizationStatus
+        if #available(iOS 14.0, *) {
+            authStatus = locationManager.authorizationStatus
+        } else {
+            authStatus = CLLocationManager.authorizationStatus()
+        }
+        let whenInUse = authorizationStatusToString(authStatus, for: .authorizedWhenInUse)
+        let always = authorizationStatusToString(authStatus, for: .authorizedAlways)
         
         invoke.resolve([
             "whenInUse": whenInUse,
@@ -60,8 +66,11 @@ class LocationPlugin: Plugin {
         ])
     }
     
-    @objc public func requestPermissions(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(PermissionRequest.self)
+    @objc public override func requestPermissions(_ invoke: Invoke) {
+        guard let args = try? invoke.parseArgs(PermissionRequest.self) else {
+            invoke.reject("Invalid arguments")
+            return
+        }
         
         // Set desired accuracy
         if let accuracy = args.accuracy {
@@ -92,8 +101,15 @@ class LocationPlugin: Plugin {
             return
         }
         
-        guard locationManager.authorizationStatus == .authorizedWhenInUse ||
-              locationManager.authorizationStatus == .authorizedAlways else {
+        let authStatus: CLAuthorizationStatus
+        if #available(iOS 14.0, *) {
+            authStatus = locationManager.authorizationStatus
+        } else {
+            authStatus = CLLocationManager.authorizationStatus()
+        }
+        
+        guard authStatus == .authorizedWhenInUse ||
+              authStatus == .authorizedAlways else {
             invoke.reject("Location permission denied")
             return
         }
@@ -140,8 +156,15 @@ class LocationPlugin: Plugin {
             return
         }
         
-        guard locationManager.authorizationStatus == .authorizedWhenInUse ||
-              locationManager.authorizationStatus == .authorizedAlways else {
+        let authStatus: CLAuthorizationStatus
+        if #available(iOS 14.0, *) {
+            authStatus = locationManager.authorizationStatus
+        } else {
+            authStatus = CLLocationManager.authorizationStatus()
+        }
+        
+        guard authStatus == .authorizedWhenInUse ||
+              authStatus == .authorizedAlways else {
             invoke.reject("Location permission denied")
             return
         }
@@ -180,7 +203,14 @@ class LocationPlugin: Plugin {
             return
         }
         
-        guard locationManager.authorizationStatus == .authorizedAlways else {
+        let authStatus: CLAuthorizationStatus
+        if #available(iOS 14.0, *) {
+            authStatus = locationManager.authorizationStatus
+        } else {
+            authStatus = CLLocationManager.authorizationStatus()
+        }
+        
+        guard authStatus == .authorizedAlways else {
             invoke.reject("Always authorization required for region monitoring")
             return
         }
@@ -245,7 +275,7 @@ class LocationPlugin: Plugin {
                 ]
             }
             
-            invoke.resolve(results)
+            invoke.resolve(["results": results])
         }
     }
     
@@ -264,7 +294,7 @@ class LocationPlugin: Plugin {
             }
             
             let results = (placemarks ?? []).map { self.serializePlacemark($0) }
-            invoke.resolve(results)
+            invoke.resolve(["results": results])
         }
     }
     
@@ -314,10 +344,38 @@ class LocationPlugin: Plugin {
             ]
         }
         
-        invoke.resolve(regions)
+        invoke.resolve(["regions": regions])
     }
     
     // MARK: - Helper Methods
+    
+    private func convertToJSObject(_ dict: [String: Any]) -> JSObject {
+        var jsObject: JSObject = [:]
+        for (key, value) in dict {
+            if let str = value as? String {
+                jsObject[key] = str
+            } else if let num = value as? NSNumber {
+                if num == kCFBooleanTrue || num == kCFBooleanFalse {
+                    jsObject[key] = num.boolValue
+                } else {
+                    jsObject[key] = num.doubleValue
+                }
+            } else if let int = value as? Int {
+                jsObject[key] = Double(int)
+            } else if let double = value as? Double {
+                jsObject[key] = double
+            } else if let bool = value as? Bool {
+                jsObject[key] = bool
+            } else if let array = value as? [Any] {
+                jsObject[key] = array
+            } else if let dict = value as? [String: Any] {
+                jsObject[key] = convertToJSObject(dict)
+            } else if value is NSNull {
+                jsObject[key] = nil
+            }
+        }
+        return jsObject
+    }
     
     private func parseAccuracy(_ accuracy: String) -> CLLocationAccuracy {
         switch accuracy.lowercased() {
@@ -392,9 +450,8 @@ class LocationPlugin: Plugin {
         data["areasOfInterest"] = placemark.areasOfInterest ?? []
         
         // Create formatted address
-        let formatter = CNPostalAddressFormatter()
         if let postalAddress = placemark.postalAddress {
-            data["formattedAddress"] = formatter.string(from: postalAddress)
+            data["formattedAddress"] = CNPostalAddressFormatter.string(from: postalAddress, style: .mailingAddress)
         }
         
         return data
@@ -433,7 +490,7 @@ extension LocationPlugin: CLLocationManagerDelegate {
             manager.stopUpdatingLocation()
         } else {
             // Handle continuous updates
-            trigger("locationUpdate", data: serializeLocation(location))
+            trigger("locationUpdate", data: convertToJSObject(serializeLocation(location)))
         }
     }
     
@@ -444,7 +501,7 @@ extension LocationPlugin: CLLocationManagerDelegate {
             invoke.reject("Location error: \(error.localizedDescription)")
             pendingLocationRequest = nil
         } else {
-            trigger("error", data: ["error": error.localizedDescription])
+            trigger("error", data: ["error": error.localizedDescription] as JSObject)
         }
     }
     
@@ -456,26 +513,31 @@ extension LocationPlugin: CLLocationManagerDelegate {
             "timestamp": ISO8601DateFormatter().string(from: newHeading.timestamp)
         ]
         
-        trigger("headingUpdate", data: heading)
+        trigger("headingUpdate", data: convertToJSObject(heading))
     }
     
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
-        trigger("regionEntered", data: ["identifier": region.identifier])
+        trigger("regionEntered", data: ["identifier": region.identifier] as JSObject)
     }
     
     func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
-        trigger("regionExited", data: ["identifier": region.identifier])
+        trigger("regionExited", data: ["identifier": region.identifier] as JSObject)
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        let authStatus = manager.authorizationStatus
-        let whenInUse = authorizationStatusToString(authStatus, for: .whenInUse)
-        let always = authorizationStatusToString(authStatus, for: .always)
+        let authStatus: CLAuthorizationStatus
+        if #available(iOS 14.0, *) {
+            authStatus = manager.authorizationStatus
+        } else {
+            authStatus = CLLocationManager.authorizationStatus()
+        }
+        let whenInUse = authorizationStatusToString(authStatus, for: .authorizedWhenInUse)
+        let always = authorizationStatusToString(authStatus, for: .authorizedAlways)
         
         trigger("authorizationChanged", data: [
             "whenInUse": whenInUse,
             "always": always
-        ])
+        ] as JSObject)
     }
 }
 

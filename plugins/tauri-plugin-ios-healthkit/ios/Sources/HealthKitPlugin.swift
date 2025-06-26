@@ -40,7 +40,7 @@ class HealthKitPlugin: Plugin {
         }
     }
     
-    @objc public func checkPermissions(_ invoke: Invoke) throws {
+    @objc public override func checkPermissions(_ invoke: Invoke) {
         var permissions: [String: Any] = [:]
         var readPermissions: [String: String] = [:]
         var writePermissions: [String: String] = [:]
@@ -78,8 +78,11 @@ class HealthKitPlugin: Plugin {
         invoke.resolve(permissions)
     }
     
-    @objc public func requestPermissions(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(HealthKitPermissionRequest.self)
+    @objc public override func requestPermissions(_ invoke: Invoke) {
+        guard let args = try? invoke.parseArgs(HealthKitPermissionRequest.self) else {
+            invoke.reject("Invalid request parameters")
+            return
+        }
         
         var readTypes = Set<HKObjectType>()
         var writeTypes = Set<HKSampleType>()
@@ -105,11 +108,7 @@ class HealthKitPlugin: Plugin {
             }
             
             // Check permissions after request
-            do {
-                try self?.checkPermissions(invoke)
-            } catch {
-                invoke.reject(error.localizedDescription)
-            }
+            self?.checkPermissions(invoke)
         }
     }
     
@@ -148,11 +147,11 @@ class HealthKitPlugin: Plugin {
                     "unit": self.getUnitString(for: quantityType),
                     "startDate": self.dateFormatter.string(from: sample.startDate),
                     "endDate": self.dateFormatter.string(from: sample.endDate),
-                    "metadata": sample.metadata
-                ]
+                    "metadata": sample.metadata ?? [:]
+                ] as [String: Any]
             }
             
-            invoke.resolve(results)
+            invoke.resolve(["samples": results])
         }
         
         healthStore.execute(query)

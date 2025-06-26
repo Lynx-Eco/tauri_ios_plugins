@@ -1,5 +1,6 @@
 import Tauri
 import UIKit
+import WebKit
 
 struct ProximityState: Codable {
     let isClose: Bool
@@ -40,7 +41,16 @@ class ProximityPlugin: Plugin {
         return formatter
     }()
     
-    override func load() {
+    // Helper function to serialize ProximityState
+    private func serializeProximityState(_ state: ProximityState) -> JSObject {
+        return [
+            "isClose": state.isClose,
+            "timestamp": state.timestamp
+        ]
+    }
+    
+    @objc public override func load(webview: WKWebView) {
+        super.load(webview: webview)
         // Set up notification observer for proximity state changes
         NotificationCenter.default.addObserver(
             self,
@@ -72,12 +82,12 @@ class ProximityPlugin: Plugin {
         monitoringStartTime = Date()
         sessionDetections = 0
         
-        trigger([
+        trigger("proximityStateChanged", data: [
             "eventType": "monitoringStarted",
-            "state": ProximityState(
+            "state": serializeProximityState(ProximityState(
                 isClose: UIDevice.current.proximityState,
                 timestamp: dateFormatter.string(from: Date())
-            )
+            ))
         ])
         
         invoke.resolve()
@@ -97,12 +107,12 @@ class ProximityPlugin: Plugin {
             proximityStartTime = nil
         }
         
-        trigger([
+        trigger("proximityStateChanged", data: [
             "eventType": "monitoringStopped",
-            "state": ProximityState(
+            "state": serializeProximityState(ProximityState(
                 isClose: false,
                 timestamp: dateFormatter.string(from: Date())
-            )
+            ))
         ])
         
         invoke.resolve()
@@ -159,10 +169,16 @@ class ProximityPlugin: Plugin {
     }
     
     @objc public func setDisplayAutoLock(_ invoke: Invoke) {
-        guard let enabled = invoke.getBool("enabled") else {
+        struct SetDisplayAutoLockArgs: Decodable {
+            let enabled: Bool
+        }
+        
+        guard let args = try? invoke.parseArgs(SetDisplayAutoLockArgs.self) else {
             invoke.reject("Invalid parameter")
             return
         }
+        
+        let enabled = args.enabled
         
         DispatchQueue.main.async {
             UIApplication.shared.isIdleTimerDisabled = !enabled
@@ -193,12 +209,12 @@ class ProximityPlugin: Plugin {
             lastDetectionTime = now
             proximityDetectionCount += 1
             
-            trigger([
+            trigger("proximityStateChanged", data: [
                 "eventType": "proximityDetected",
-                "state": ProximityState(
+                "state": serializeProximityState(ProximityState(
                     isClose: true,
                     timestamp: dateFormatter.string(from: now)
-                )
+                ))
             ])
         } else {
             // Object removed
@@ -207,12 +223,12 @@ class ProximityPlugin: Plugin {
                 proximityStartTime = nil
             }
             
-            trigger([
+            trigger("proximityStateChanged", data: [
                 "eventType": "proximityCleared",
-                "state": ProximityState(
+                "state": serializeProximityState(ProximityState(
                     isClose: false,
                     timestamp: dateFormatter.string(from: now)
-                )
+                ))
             ])
         }
     }

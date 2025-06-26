@@ -44,6 +44,7 @@ struct ExportRequestData: Decodable {
     let format: ExportFormatData
 }
 
+@available(iOS 15.0, *)
 class ScreenTimePlugin: Plugin {
     private let authorizationCenter = AuthorizationCenter.shared
     private let deviceActivityCenter = DeviceActivityCenter()
@@ -54,6 +55,7 @@ class ScreenTimePlugin: Plugin {
         iso8601Formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     }
     
+    @available(iOS 16.0, *)
     @objc public func requestAuthorization(_ invoke: Invoke) throws {
         Task {
             do {
@@ -84,8 +86,8 @@ class ScreenTimePlugin: Plugin {
             let date: String? // ISO 8601 date string
         }
         
-        let args = try? invoke.parseArgs(GetSummaryArgs.self)
-        let targetDate = args?.date.flatMap { iso8601Formatter.date(from: $0) } ?? Date()
+        let _ = try? invoke.parseArgs(GetSummaryArgs.self)
+        let targetDate = Date()
         
         // Note: Real implementation would use DeviceActivity framework
         // This is a mock response as Screen Time data access is restricted
@@ -118,27 +120,29 @@ class ScreenTimePlugin: Plugin {
             let range: TimeRangeData?
         }
         
-        let args = try? invoke.parseArgs(GetUsageArgs.self)
+        let _ = try? invoke.parseArgs(GetUsageArgs.self)
         
-        // Mock app usage data
-        let mockUsage: [[String: Any]] = [
-            [
-                "bundleId": "com.example.app1",
-                "displayName": "Social App",
-                "duration": 3600,
-                "numberOfPickups": 12,
-                "numberOfNotifications": 15,
-                "category": "social",
-                "icon": nil
-            ],
-            [
-                "bundleId": "com.example.app2",
-                "displayName": "Game App",
-                "duration": 2400,
-                "numberOfPickups": 8,
-                "numberOfNotifications": 3,
-                "category": "games",
-                "icon": nil
+        // Mock app usage data - wrap in a dictionary to satisfy resolve()
+        let mockUsage: [String: Any] = [
+            "apps": [
+                [
+                    "bundleId": "com.example.app1",
+                    "displayName": "Social App",
+                    "duration": 3600,
+                    "numberOfPickups": 12,
+                    "numberOfNotifications": 15,
+                    "category": "social",
+                    "icon": NSNull()
+                ],
+                [
+                    "bundleId": "com.example.app2",
+                    "displayName": "Game App",
+                    "duration": 2400,
+                    "numberOfPickups": 8,
+                    "numberOfNotifications": 3,
+                    "category": "games",
+                    "icon": NSNull()
+                ]
             ]
         ]
         
@@ -150,21 +154,23 @@ class ScreenTimePlugin: Plugin {
             let range: TimeRangeData?
         }
         
-        let args = try? invoke.parseArgs(GetUsageArgs.self)
+        let _ = try? invoke.parseArgs(GetUsageArgs.self)
         
-        // Mock category usage data
-        let mockUsage: [[String: Any]] = [
-            [
-                "category": "social",
-                "duration": 7200,
-                "numberOfApps": 3,
-                "apps": ["com.example.social1", "com.example.social2", "com.example.social3"]
-            ],
-            [
-                "category": "games",
-                "duration": 3600,
-                "numberOfApps": 2,
-                "apps": ["com.example.game1", "com.example.game2"]
+        // Mock category usage data - wrap in a dictionary
+        let mockUsage: [String: Any] = [
+            "categories": [
+                [
+                    "category": "social",
+                    "duration": 7200,
+                    "numberOfApps": 3,
+                    "apps": ["com.example.social1", "com.example.social2", "com.example.social3"]
+                ],
+                [
+                    "category": "games",
+                    "duration": 3600,
+                    "numberOfApps": 2,
+                    "apps": ["com.example.game1", "com.example.game2"]
+                ]
             ]
         ]
         
@@ -176,19 +182,21 @@ class ScreenTimePlugin: Plugin {
             let range: TimeRangeData?
         }
         
-        let args = try? invoke.parseArgs(GetUsageArgs.self)
+        let _ = try? invoke.parseArgs(GetUsageArgs.self)
         
-        // Mock web usage data
-        let mockUsage: [[String: Any]] = [
-            [
-                "domain": "example.com",
-                "duration": 1800,
-                "numberOfVisits": 25
-            ],
-            [
-                "domain": "news.example.com",
-                "duration": 1200,
-                "numberOfVisits": 10
+        // Mock web usage data - wrap in a dictionary
+        let mockUsage: [String: Any] = [
+            "domains": [
+                [
+                    "domain": "example.com",
+                    "duration": 1800,
+                    "numberOfVisits": 25
+                ],
+                [
+                    "domain": "news.example.com",
+                    "duration": 1200,
+                    "numberOfVisits": 10
+                ]
             ]
         ]
         
@@ -200,25 +208,27 @@ class ScreenTimePlugin: Plugin {
             let range: TimeRangeData?
         }
         
-        let args = try? invoke.parseArgs(GetActivityArgs.self)
+        let _ = try? invoke.parseArgs(GetActivityArgs.self)
         
-        // Mock device activity data
+        // Mock device activity data - wrap in a dictionary
         let now = Date()
-        let mockActivity: [[String: Any]] = [
-            [
-                "timestamp": iso8601Formatter.string(from: now.addingTimeInterval(-3600)),
-                "eventType": "screenOn",
-                "associatedApp": nil
-            ],
-            [
-                "timestamp": iso8601Formatter.string(from: now.addingTimeInterval(-3000)),
-                "eventType": "appOpen",
-                "associatedApp": "com.example.app"
-            ],
-            [
-                "timestamp": iso8601Formatter.string(from: now.addingTimeInterval(-1800)),
-                "eventType": "notificationReceived",
-                "associatedApp": "com.example.app"
+        let mockActivity: [String: Any] = [
+            "activities": [
+                [
+                    "timestamp": iso8601Formatter.string(from: now.addingTimeInterval(-3600)),
+                    "eventType": "screenOn",
+                    "associatedApp": NSNull()
+                ],
+                [
+                    "timestamp": iso8601Formatter.string(from: now.addingTimeInterval(-3000)),
+                    "eventType": "appOpen",
+                    "associatedApp": "com.example.app"
+                ],
+                [
+                    "timestamp": iso8601Formatter.string(from: now.addingTimeInterval(-1800)),
+                    "eventType": "notificationReceived",
+                    "associatedApp": "com.example.app"
+                ]
             ]
         ]
         
@@ -230,7 +240,7 @@ class ScreenTimePlugin: Plugin {
             let date: String?
         }
         
-        let args = try? invoke.parseArgs(GetSummaryArgs.self)
+        let _ = try? invoke.parseArgs(GetSummaryArgs.self)
         
         // Mock notifications summary
         let mockSummary: [String: Any] = [
@@ -260,7 +270,7 @@ class ScreenTimePlugin: Plugin {
             let date: String?
         }
         
-        let args = try? invoke.parseArgs(GetSummaryArgs.self)
+        let _ = try? invoke.parseArgs(GetSummaryArgs.self)
         
         // Mock pickups summary
         let mockSummary: [String: Any] = [
@@ -285,7 +295,7 @@ class ScreenTimePlugin: Plugin {
     }
     
     @objc public func setAppLimit(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(SetAppLimitData.self)
+        let _ = try invoke.parseArgs(SetAppLimitData.self)
         
         // In a real implementation, this would use FamilyControls
         // to set app limits. For now, we'll return a mock ID
@@ -294,14 +304,16 @@ class ScreenTimePlugin: Plugin {
     }
     
     @objc public func getAppLimits(_ invoke: Invoke) throws {
-        // Mock app limits data
-        let mockLimits: [[String: Any]] = [
-            [
-                "id": "limit-1",
-                "bundleIds": ["com.example.app1", "com.example.app2"],
-                "timeLimit": 3600,
-                "daysOfWeek": ["monday", "tuesday", "wednesday", "thursday", "friday"],
-                "enabled": true
+        // Mock app limits data - wrap in a dictionary
+        let mockLimits: [String: Any] = [
+            "limits": [
+                [
+                    "id": "limit-1",
+                    "bundleIds": ["com.example.app1", "com.example.app2"],
+                    "timeLimit": 3600,
+                    "daysOfWeek": ["monday", "tuesday", "wednesday", "thursday", "friday"],
+                    "enabled": true
+                ]
             ]
         ]
         
@@ -313,14 +325,14 @@ class ScreenTimePlugin: Plugin {
             let limitId: String
         }
         
-        let args = try invoke.parseArgs(RemoveLimitArgs.self)
+        let _ = try invoke.parseArgs(RemoveLimitArgs.self)
         
         // In a real implementation, this would remove the limit
         invoke.resolve()
     }
     
     @objc public func setDowntimeSchedule(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(SetDowntimeData.self)
+        let _ = try invoke.parseArgs(SetDowntimeData.self)
         
         // In a real implementation, this would use FamilyControls
         // to set downtime schedule. For now, we'll return a mock ID
@@ -347,7 +359,7 @@ class ScreenTimePlugin: Plugin {
             let scheduleId: String
         }
         
-        let args = try invoke.parseArgs(RemoveScheduleArgs.self)
+        let _ = try invoke.parseArgs(RemoveScheduleArgs.self)
         
         // In a real implementation, this would remove the schedule
         invoke.resolve()
@@ -358,7 +370,7 @@ class ScreenTimePlugin: Plugin {
             let bundleId: String
         }
         
-        let args = try invoke.parseArgs(BlockAppArgs.self)
+        let _ = try invoke.parseArgs(BlockAppArgs.self)
         
         // In a real implementation, this would use FamilyControls
         invoke.resolve()
@@ -369,7 +381,7 @@ class ScreenTimePlugin: Plugin {
             let bundleId: String
         }
         
-        let args = try invoke.parseArgs(UnblockAppArgs.self)
+        let _ = try invoke.parseArgs(UnblockAppArgs.self)
         
         // In a real implementation, this would use FamilyControls
         invoke.resolve()
@@ -382,7 +394,7 @@ class ScreenTimePlugin: Plugin {
     }
     
     @objc public func setCommunicationSafety(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(CommunicationSafetyData.self)
+        let _ = try invoke.parseArgs(CommunicationSafetyData.self)
         
         // In a real implementation, this would configure communication safety
         invoke.resolve()
@@ -402,69 +414,52 @@ class ScreenTimePlugin: Plugin {
         invoke.resolve(mockSettings)
     }
     
-    @objc public func getScreenDistance(_ invoke: Invoke) throws {
-        // Mock screen distance data
-        // In iOS 17+, this would use actual screen distance APIs
-        let mockDistance: [String: Any] = [
-            "currentDistance": 35.5, // cm
-            "isTooClose": false,
-            "recommendedDistance": 30.0,
-            "durationTooClose": 300 // 5 minutes
+    @objc public func exportData(_ invoke: Invoke) throws {
+        let _ = try invoke.parseArgs(ExportRequestData.self)
+        
+        // Mock exported data
+        let mockExport: [String: Any] = [
+            "format": "json",
+            "createdAt": iso8601Formatter.string(from: Date()),
+            "dataUrl": "https://example.com/export/screentime-data.json"
         ]
         
-        invoke.resolve(mockDistance)
+        invoke.resolve(mockExport)
     }
     
-    @objc public func getUsageTrends(_ invoke: Invoke) throws {
-        struct GetTrendsArgs: Decodable {
-            let period: String
+    @objc public func isScreenTimeAvailable(_ invoke: Invoke) throws {
+        // Check if Screen Time is available
+        if #available(iOS 16.0, *) {
+            invoke.resolve(AuthorizationCenter.shared.authorizationStatus != .notDetermined)
+        } else {
+            invoke.resolve(false)
         }
-        
-        let args = try invoke.parseArgs(GetTrendsArgs.self)
-        
-        // Mock usage trends
-        let now = Date()
-        var dataPoints: [[String: Any]] = []
-        
-        for i in 0..<7 {
-            let date = now.addingTimeInterval(TimeInterval(-i * 86400))
-            dataPoints.append([
-                "date": iso8601Formatter.string(from: date),
-                "screenTime": 14400 - (i * 600), // Decreasing trend
-                "pickups": 45 - (i * 2)
-            ])
-        }
-        
-        let mockTrends: [String: Any] = [
-            "period": args.period,
-            "screenTimeTrend": "down",
-            "pickupsTrend": "down",
-            "screenTimeChange": -15.5,
-            "pickupsChange": -20.0,
-            "dataPoints": dataPoints.reversed()
-        ]
-        
-        invoke.resolve(mockTrends)
     }
     
-    @objc public func exportUsageReport(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(ExportRequestData.self)
+    @objc public override func checkPermissions(_ invoke: Invoke) {
+        // Check current authorization status
+        let status: String
+        switch authorizationCenter.authorizationStatus {
+        case .approved:
+            status = "granted"
+        case .denied:
+            status = "denied"
+        case .notDetermined:
+            status = "prompt"
+        @unknown default:
+            status = "unknown"
+        }
         
-        // In a real implementation, this would generate an actual report
-        // For now, we'll return a mock file path
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
-        let fileName = "screen_time_report_\(Date().timeIntervalSince1970).\(args.format.format.lowercased())"
-        let filePath = "\(documentsPath)/\(fileName)"
-        
-        // Create a mock file
-        let mockContent = "Mock Screen Time Report"
-        try mockContent.write(toFile: filePath, atomically: true, encoding: .utf8)
-        
-        invoke.resolve(filePath)
+        invoke.resolve(status)
     }
 }
 
 @_cdecl("init_plugin_ios_screentime")
 func initPlugin() -> Plugin {
-    return ScreenTimePlugin()
+    if #available(iOS 15.0, *) {
+        return ScreenTimePlugin()
+    } else {
+        // Return a stub plugin for older iOS versions
+        return Plugin()
+    }
 }

@@ -193,89 +193,93 @@ export interface ExportFormat {
 
 // API Functions
 export async function requestAuthorization(): Promise<boolean> {
-  return await invoke('plugin:ios-screentime-v2|request_authorization')
+  return await invoke('plugin:ios-screentime|request_authorization')
 }
 
 export async function getScreenTimeSummary(date?: string): Promise<ScreenTimeSummary> {
-  return await invoke('plugin:ios-screentime-v2|get_screen_time_summary', { date })
+  return await invoke('plugin:ios-screentime|get_screen_time_summary', { date })
 }
 
-export async function getAppUsage(range?: TimeRange): Promise<AppUsageInfo[]> {
-  return await invoke('plugin:ios-screentime-v2|get_app_usage', { range })
+export async function getAppUsage(range?: TimeRange): Promise<{ apps: AppUsageInfo[] }> {
+  return await invoke('plugin:ios-screentime|get_app_usage', { range })
 }
 
-export async function getCategoryUsage(range?: TimeRange): Promise<CategoryUsageInfo[]> {
-  return await invoke('plugin:ios-screentime-v2|get_category_usage', { range })
+export async function getCategoryUsage(range?: TimeRange): Promise<{ categories: CategoryUsageInfo[] }> {
+  return await invoke('plugin:ios-screentime|get_category_usage', { range })
 }
 
-export async function getWebUsage(range?: TimeRange): Promise<WebUsageInfo[]> {
-  return await invoke('plugin:ios-screentime-v2|get_web_usage', { range })
+export async function getWebUsage(range?: TimeRange): Promise<{ domains: WebUsageInfo[] }> {
+  return await invoke('plugin:ios-screentime|get_web_usage', { range })
 }
 
-export async function getDeviceActivity(range?: TimeRange): Promise<DeviceActivity[]> {
-  return await invoke('plugin:ios-screentime-v2|get_device_activity', { range })
+export async function getDeviceActivity(range?: TimeRange): Promise<{ activities: DeviceActivity[] }> {
+  return await invoke('plugin:ios-screentime|get_device_activity', { range })
 }
 
 export async function getNotificationsSummary(date?: string): Promise<NotificationsSummary> {
-  return await invoke('plugin:ios-screentime-v2|get_notifications_summary', { date })
+  return await invoke('plugin:ios-screentime|get_notifications_summary', { date })
 }
 
 export async function getPickupsSummary(date?: string): Promise<PickupsSummary> {
-  return await invoke('plugin:ios-screentime-v2|get_pickups_summary', { date })
+  return await invoke('plugin:ios-screentime|get_pickups_summary', { date })
 }
 
-export async function setAppLimit(request: SetAppLimitRequest): Promise<string> {
-  return await invoke('plugin:ios-screentime-v2|set_app_limit', { request })
+export async function setAppLimit(bundleIds: string[], timeLimit: number, daysOfWeek: DayOfWeek[]): Promise<string> {
+  return await invoke('plugin:ios-screentime|set_app_limit', { bundleIds, timeLimit, daysOfWeek })
 }
 
-export async function getAppLimits(): Promise<AppLimit[]> {
-  return await invoke('plugin:ios-screentime-v2|get_app_limits')
+export async function getAppLimits(): Promise<{ limits: AppLimit[] }> {
+  return await invoke('plugin:ios-screentime|get_app_limits')
 }
 
 export async function removeAppLimit(limitId: string): Promise<void> {
-  return await invoke('plugin:ios-screentime-v2|remove_app_limit', { limitId })
+  return await invoke('plugin:ios-screentime|remove_app_limit', { limitId })
 }
 
-export async function setDowntimeSchedule(request: SetDowntimeRequest): Promise<string> {
-  return await invoke('plugin:ios-screentime-v2|set_downtime_schedule', { request })
+export async function setDowntimeSchedule(startTime: string, endTime: string, daysOfWeek: DayOfWeek[], allowedApps: string[]): Promise<string> {
+  return await invoke('plugin:ios-screentime|set_downtime_schedule', { startTime, endTime, daysOfWeek, allowedApps })
 }
 
 export async function getDowntimeSchedule(): Promise<DowntimeSchedule | null> {
-  return await invoke('plugin:ios-screentime-v2|get_downtime_schedule')
+  return await invoke('plugin:ios-screentime|get_downtime_schedule')
 }
 
 export async function removeDowntimeSchedule(scheduleId: string): Promise<void> {
-  return await invoke('plugin:ios-screentime-v2|remove_downtime_schedule', { scheduleId })
+  return await invoke('plugin:ios-screentime|remove_downtime_schedule', { scheduleId })
 }
 
 export async function blockApp(bundleId: string): Promise<void> {
-  return await invoke('plugin:ios-screentime-v2|block_app', { bundleId })
+  return await invoke('plugin:ios-screentime|block_app', { bundleId })
 }
 
 export async function unblockApp(bundleId: string): Promise<void> {
-  return await invoke('plugin:ios-screentime-v2|unblock_app', { bundleId })
+  return await invoke('plugin:ios-screentime|unblock_app', { bundleId })
 }
 
 export async function getBlockedApps(): Promise<string[]> {
-  return await invoke('plugin:ios-screentime-v2|get_blocked_apps')
+  return await invoke('plugin:ios-screentime|get_blocked_apps')
 }
 
-export async function setCommunicationSafety(settings: CommunicationSafetySettings): Promise<void> {
-  return await invoke('plugin:ios-screentime-v2|set_communication_safety', { settings })
+export async function setCommunicationSafety(checkPhotosAndVideos: boolean, communicationSafetyEnabled: boolean, notifyChild: boolean, notifyParent: boolean): Promise<void> {
+  return await invoke('plugin:ios-screentime|set_communication_safety', { 
+    checkPhotosAndVideos, 
+    communicationSafetyEnabled, 
+    notificationSettings: { notifyChild, notifyParent }
+  })
 }
 
 export async function getCommunicationSafetySettings(): Promise<CommunicationSafetySettings> {
-  return await invoke('plugin:ios-screentime-v2|get_communication_safety_settings')
+  return await invoke('plugin:ios-screentime|get_communication_safety_settings')
 }
 
-export async function getScreenDistance(): Promise<ScreenDistance> {
-  return await invoke('plugin:ios-screentime-v2|get_screen_distance')
+export async function exportData(range: TimeRange, format: ExportFormat): Promise<{ format: string; createdAt: string; dataUrl: string }> {
+  return await invoke('plugin:ios-screentime|export_data', { range, format })
 }
 
-export async function getUsageTrends(period: TrendPeriod): Promise<UsageTrend> {
-  return await invoke('plugin:ios-screentime-v2|get_usage_trends', { period })
+export async function isScreenTimeAvailable(): Promise<boolean> {
+  return await invoke('plugin:ios-screentime|is_screen_time_available')
 }
 
-export async function exportUsageReport(range: TimeRange, format: ExportFormat): Promise<string> {
-  return await invoke('plugin:ios-screentime-v2|export_usage_report', { range, format })
+export async function checkPermissions(): Promise<string> {
+  return await invoke('plugin:ios-screentime|check_permissions')
 }

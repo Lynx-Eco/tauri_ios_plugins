@@ -38,11 +38,11 @@ struct PermissionRequest: Decodable {
 
 class CameraPlugin: Plugin {
     private var currentImagePickerController: UIImagePickerController?
-    private var currentPHPickerController: PHPickerViewController?
+    private var currentPHPickerController: Any? // PHPickerViewController is iOS 14+
     private var pendingInvoke: Invoke?
     private var captureOptions: Any?
     
-    @objc public func checkPermissions(_ invoke: Invoke) throws {
+    @objc public override func checkPermissions(_ invoke: Invoke) {
         var permissions: [String: String] = [:]
         
         // Camera permission
@@ -60,8 +60,11 @@ class CameraPlugin: Plugin {
         invoke.resolve(permissions)
     }
     
-    @objc public func requestPermissions(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(PermissionRequest.self)
+    @objc public override func requestPermissions(_ invoke: Invoke) {
+        guard let args = try? invoke.parseArgs(PermissionRequest.self) else {
+            invoke.reject("Invalid arguments")
+            return
+        }
         
         let group = DispatchGroup()
         var permissions: [String: String] = [:]
@@ -195,15 +198,26 @@ class CameraPlugin: Plugin {
             self.pendingInvoke = invoke
             self.captureOptions = args
             
-            var config = PHPickerConfiguration()
-            config.selectionLimit = args?.allowMultiple ?? false ? (args?.limit ?? 0) : 1
-            config.filter = .images
-            
-            let picker = PHPickerViewController(configuration: config)
-            picker.delegate = self
-            
-            self.currentPHPickerController = picker
-            self.presentViewController(picker)
+            if #available(iOS 14.0, *) {
+                var config = PHPickerConfiguration()
+                config.selectionLimit = args?.allowMultiple ?? false ? (args?.limit ?? 0) : 1
+                config.filter = .images
+                
+                let picker = PHPickerViewController(configuration: config)
+                picker.delegate = self
+                
+                self.currentPHPickerController = picker
+                self.presentViewController(picker)
+            } else {
+                // Fall back to UIImagePickerController for iOS 13
+                let picker = UIImagePickerController()
+                picker.delegate = self
+                picker.sourceType = .photoLibrary
+                picker.mediaTypes = ["public.image"]
+                
+                self.currentImagePickerController = picker
+                self.presentViewController(picker)
+            }
         }
     }
     
@@ -219,15 +233,26 @@ class CameraPlugin: Plugin {
             self.pendingInvoke = invoke
             self.captureOptions = args
             
-            var config = PHPickerConfiguration()
-            config.selectionLimit = args?.allowMultiple ?? false ? (args?.limit ?? 0) : 1
-            config.filter = .videos
-            
-            let picker = PHPickerViewController(configuration: config)
-            picker.delegate = self
-            
-            self.currentPHPickerController = picker
-            self.presentViewController(picker)
+            if #available(iOS 14.0, *) {
+                var config = PHPickerConfiguration()
+                config.selectionLimit = args?.allowMultiple ?? false ? (args?.limit ?? 0) : 1
+                config.filter = .videos
+                
+                let picker = PHPickerViewController(configuration: config)
+                picker.delegate = self
+                
+                self.currentPHPickerController = picker
+                self.presentViewController(picker)
+            } else {
+                // Fall back to UIImagePickerController for iOS 13
+                let picker = UIImagePickerController()
+                picker.delegate = self
+                picker.sourceType = .photoLibrary
+                picker.mediaTypes = ["public.movie"]
+                
+                self.currentImagePickerController = picker
+                self.presentViewController(picker)
+            }
         }
     }
     
@@ -256,7 +281,7 @@ class CameraPlugin: Plugin {
             cameras.append(info)
         }
         
-        invoke.resolve(cameras)
+        invoke.resolve(["cameras": cameras])
     }
     
     // MARK: - Helper Methods
@@ -391,7 +416,7 @@ class CameraPlugin: Plugin {
         case "high":
             return .typeHigh
         case "ultra":
-            return .type3840x2160
+            return .typeHigh // 4K not available on all devices
         default:
             return .typeHigh
         }
@@ -480,6 +505,7 @@ extension CameraPlugin: UIImagePickerControllerDelegate, UINavigationControllerD
 
 // MARK: - PHPickerViewControllerDelegate
 
+@available(iOS 14.0, *)
 extension CameraPlugin: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
@@ -519,7 +545,7 @@ extension CameraPlugin: PHPickerViewControllerDelegate {
         }
         
         group.notify(queue: .main) { [weak self] in
-            self?.pendingInvoke?.resolve(mediaItems)
+            self?.pendingInvoke?.resolve(["media": mediaItems])
             self?.cleanup()
         }
     }

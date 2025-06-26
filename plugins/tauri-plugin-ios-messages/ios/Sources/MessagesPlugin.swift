@@ -149,7 +149,7 @@ class MessagesPlugin: Plugin, MFMessageComposeViewControllerDelegate {
     @objc public func getConversationList(_ invoke: Invoke) throws {
         // iOS doesn't provide access to message history for privacy reasons
         // Return empty array or mock data
-        invoke.resolve([])
+        invoke.resolve(["conversations": []])
     }
     
     @objc public func getConversation(_ invoke: Invoke) throws {
@@ -305,13 +305,13 @@ class MessagesPlugin: Plugin, MFMessageComposeViewControllerDelegate {
                 response = [
                     "sent": true,
                     "cancelled": false,
-                    "error": nil
+                    "error": NSNull()
                 ]
             case .cancelled:
                 response = [
                     "sent": false,
                     "cancelled": true,
-                    "error": nil
+                    "error": NSNull()
                 ]
             case .failed:
                 response = [

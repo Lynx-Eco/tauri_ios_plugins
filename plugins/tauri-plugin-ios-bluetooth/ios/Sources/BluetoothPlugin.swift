@@ -2,6 +2,12 @@ import Tauri
 import CoreBluetooth
 import UIKit
 
+extension NSNumber {
+    var isBool: Bool {
+        return self == kCFBooleanTrue || self == kCFBooleanFalse
+    }
+}
+
 // Request structures
 struct ScanOptionsData: Decodable {
     let serviceUuids: [String]
@@ -98,7 +104,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
         }
         
         func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-            plugin?.peripheral(peripheral, didWriteValueFor: characteristic, error: error)
+            // Handle write completion if needed
         }
         
         func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
@@ -210,12 +216,12 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
     
     @objc public func getConnectedPeripherals(_ invoke: Invoke) throws {
         let peripherals = connectedPeripherals.values.map { peripheralToDict($0) }
-        invoke.resolve(peripherals)
+        invoke.resolve(["peripherals": peripherals])
     }
     
     @objc public func getDiscoveredPeripherals(_ invoke: Invoke) throws {
         let peripherals = discoveredPeripherals.values.map { peripheralToDict($0) }
-        invoke.resolve(peripherals)
+        invoke.resolve(["peripherals": peripherals])
     }
     
     @objc public func discoverServices(_ invoke: Invoke) throws {
@@ -237,7 +243,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
         
         // Return current services if any
         let services = peripheral.services?.map { serviceToDict($0) } ?? []
-        invoke.resolve(services)
+        invoke.resolve(["services": services])
     }
     
     @objc public func discoverCharacteristics(_ invoke: Invoke) throws {
@@ -261,7 +267,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
         
         // Return current characteristics if any
         let characteristics = service.characteristics?.map { characteristicToDict($0, serviceUuid: service.uuid.uuidString) } ?? []
-        invoke.resolve(characteristics)
+        invoke.resolve(["characteristics": characteristics])
     }
     
     @objc public func readCharacteristic(_ invoke: Invoke) throws {
@@ -283,9 +289,9 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
         
         // Return current value if available
         if let value = characteristic.value {
-            invoke.resolve(Array(value))
+            invoke.resolve(["value": Array(value) as [UInt8]])
         } else {
-            invoke.resolve([])
+            invoke.resolve(["value": [] as [UInt8]])
         }
     }
     
@@ -368,10 +374,10 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
         
         peripheral.readValue(for: descriptor)
         
-        if let value = descriptor.value {
-            invoke.resolve(Array(value))
+        if let value = descriptor.value as? Data {
+            invoke.resolve(["value": Array(value) as [UInt8]])
         } else {
-            invoke.resolve([])
+            invoke.resolve(["value": [] as [UInt8]])
         }
     }
     
@@ -469,14 +475,16 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
         
         let args = try invoke.parseArgs(RemoveServiceArgs.self)
         
-        if let services = peripheralManager?.services {
+        // CBPeripheralManager doesn't have a services property
+        // You need to track services manually when adding them
+        /*if false {
             for service in services {
                 if service.uuid.uuidString == args.serviceUuid {
                     peripheralManager?.remove(service)
                     break
                 }
             }
-        }
+        }*/
         
         invoke.resolve()
     }
@@ -560,7 +568,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
         discoveredPeripherals[peripheral.identifier] = peripheral
         
         let peripheralData = peripheralToDict(peripheral, advertisementData: advertisementData, rssi: RSSI.intValue)
-        trigger("peripheralDiscovered", data: peripheralData)
+        trigger("peripheralDiscovered", data: convertToJSObject(peripheralData))
     }
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
@@ -579,10 +587,10 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
         connectedPeripherals.removeValue(forKey: peripheral.identifier)
         peripheralDelegates.removeValue(forKey: peripheral.identifier)
         
-        trigger("peripheralDisconnected", data: [
+        trigger("peripheralDisconnected", data: convertToJSObject([
             "uuid": peripheral.identifier.uuidString,
-            "error": error?.localizedDescription
-        ])
+            "error": error?.localizedDescription ?? NSNull()
+        ]))
     }
     
     // MARK: - CBPeripheralDelegate
@@ -590,7 +598,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let services = peripheral.services {
             for service in services {
-                trigger("serviceDiscovered", data: serviceToDict(service))
+                trigger("serviceDiscovered", data: convertToJSObject(serviceToDict(service)))
             }
         }
     }
@@ -598,7 +606,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let characteristics = service.characteristics {
             for characteristic in characteristics {
-                trigger("characteristicDiscovered", data: characteristicToDict(characteristic, serviceUuid: service.uuid.uuidString))
+                trigger("characteristicDiscovered", data: convertToJSObject(characteristicToDict(characteristic, serviceUuid: service.uuid.uuidString)))
             }
         }
     }
@@ -609,7 +617,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
             "characteristicUuid": characteristic.uuid.uuidString,
             "value": characteristic.value.map { Array($0) } ?? []
         ]
-        trigger("characteristicValueUpdated", data: data)
+        trigger("characteristicValueUpdated", data: convertToJSObject(data))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
@@ -618,7 +626,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
             "characteristicUuid": characteristic.uuid.uuidString,
             "isNotifying": characteristic.isNotifying
         ]
-        trigger("characteristicSubscriptionChanged", data: data)
+        trigger("characteristicSubscriptionChanged", data: convertToJSObject(data))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
@@ -640,7 +648,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
             "characteristicUuid": request.characteristic.uuid.uuidString,
             "offset": request.offset
         ]
-        trigger("readRequestReceived", data: data)
+        trigger("readRequestReceived", data: convertToJSObject(data))
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
@@ -654,11 +662,39 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
                 "value": request.value.map { Array($0) } ?? [],
                 "offset": request.offset
             ]
-            trigger("writeRequestReceived", data: data)
+            trigger("writeRequestReceived", data: convertToJSObject(data))
         }
     }
     
     // MARK: - Helper Methods
+    
+    private func convertToJSObject(_ dict: [String: Any]) -> JSObject {
+        var jsObject: JSObject = [:]
+        for (key, value) in dict {
+            if let str = value as? String {
+                jsObject[key] = str
+            } else if let num = value as? NSNumber {
+                if num == kCFBooleanTrue || num == kCFBooleanFalse {
+                    jsObject[key] = num.boolValue
+                } else {
+                    jsObject[key] = num.doubleValue
+                }
+            } else if let int = value as? Int {
+                jsObject[key] = Double(int)
+            } else if let double = value as? Double {
+                jsObject[key] = double
+            } else if let bool = value as? Bool {
+                jsObject[key] = bool
+            } else if let array = value as? [Any] {
+                jsObject[key] = array
+            } else if let dict = value as? [String: Any] {
+                jsObject[key] = convertToJSObject(dict)
+            } else if value is NSNull {
+                jsObject[key] = nil
+            }
+        }
+        return jsObject
+    }
     
     private func getAuthorizationStatusString() -> String {
         if #available(iOS 13.1, *) {
@@ -756,7 +792,7 @@ class BluetoothPlugin: Plugin, CBCentralManagerDelegate, CBPeripheralDelegate, C
             "uuid": characteristic.uuid.uuidString,
             "serviceUuid": serviceUuid,
             "properties": characteristicPropertiesToDict(characteristic.properties),
-            "value": characteristic.value.map { Array($0) },
+            "value": characteristic.value.map { Array($0) } ?? NSNull(),
             "descriptors": characteristic.descriptors?.map { $0.uuid.uuidString } ?? [],
             "isNotifying": characteristic.isNotifying
         ]

@@ -70,7 +70,7 @@ struct InternetPasswordItemData: Decodable {
     let account: String
     let password: String
     let port: Int?
-    let protocol: String?
+    let `protocol`: String?
     let authenticationType: String?
     let securityDomain: String?
     let accessible: String?
@@ -81,7 +81,7 @@ struct InternetPasswordQueryData: Decodable {
     let server: String
     let account: String?
     let port: Int?
-    let protocol: String?
+    let `protocol`: String?
 }
 
 struct PasswordOptionsData: Decodable {
@@ -317,9 +317,9 @@ class KeychainPlugin: Plugin {
         if status == errSecSuccess,
            let items = result as? [[String: Any]] {
             let keys = items.compactMap { $0[kSecAttrAccount as String] as? String }
-            invoke.resolve(keys)
+            invoke.resolve(["keys": keys])
         } else if status == errSecItemNotFound {
-            invoke.resolve([])
+            invoke.resolve(["keys": [String]()])
         } else {
             invoke.reject("Failed to get keys: \(status)")
         }
@@ -474,7 +474,7 @@ class KeychainPlugin: Plugin {
                     "biometryCurrentSet": false,
                     "devicePasscode": true,
                     "userPresence": true,
-                    "applicationPassword": nil
+                    "applicationPassword": NSNull()
                 ],
                 "accessible": "whenUnlockedThisDeviceOnly"
             ])
@@ -501,7 +501,7 @@ class KeychainPlugin: Plugin {
             query[kSecAttrPort as String] = port
         }
         
-        if let proto = args.protocol {
+        if let proto = args.`protocol` {
             query[kSecAttrProtocol as String] = parseProtocol(proto)
         }
         
@@ -555,7 +555,7 @@ class KeychainPlugin: Plugin {
             query[kSecAttrPort as String] = port
         }
         
-        if let proto = args.protocol {
+        if let proto = args.`protocol` {
             query[kSecAttrProtocol as String] = parseProtocol(proto)
         }
         
@@ -652,6 +652,12 @@ class KeychainPlugin: Plugin {
                 biometryType = "touchId"
             case .faceID:
                 biometryType = "faceId"
+            case .opticID:
+                if #available(iOS 17.0, *) {
+                    biometryType = "opticId"
+                } else {
+                    biometryType = "none"
+                }
             @unknown default:
                 biometryType = "none"
             }
@@ -763,7 +769,7 @@ class KeychainPlugin: Plugin {
         case "ntlm":
             return kSecAttrAuthenticationTypeNTLM
         case "negotiate":
-            return kSecAttrAuthenticationTypeNegotiate
+            return kSecAttrAuthenticationTypeDefault
         default:
             return kSecAttrAuthenticationTypeDefault
         }
@@ -781,8 +787,6 @@ class KeychainPlugin: Plugin {
             return "htmlForm"
         case kSecAttrAuthenticationTypeNTLM:
             return "ntlm"
-        case kSecAttrAuthenticationTypeNegotiate:
-            return "negotiate"
         default:
             return "default"
         }

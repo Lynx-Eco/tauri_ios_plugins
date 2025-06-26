@@ -117,7 +117,7 @@ pub(crate) async fn search_catalog<R: Runtime>(
 
 #[command]
 pub(crate) async fn skip_to_next<R: Runtime>(
-    app: AppHandle<R>,
+    _app: AppHandle<R>,
 ) -> Result<()> {
     // This would need implementation
     Ok(())
@@ -125,7 +125,7 @@ pub(crate) async fn skip_to_next<R: Runtime>(
 
 #[command]
 pub(crate) async fn skip_to_previous<R: Runtime>(
-    app: AppHandle<R>,
+    _app: AppHandle<R>,
 ) -> Result<()> {
     // This would need implementation
     Ok(())
@@ -133,7 +133,7 @@ pub(crate) async fn skip_to_previous<R: Runtime>(
 
 #[command]
 pub(crate) async fn set_playback_time<R: Runtime>(
-    app: AppHandle<R>,
+    _app: AppHandle<R>,
     _time: f64,
 ) -> Result<()> {
     // This would need implementation
@@ -142,7 +142,7 @@ pub(crate) async fn set_playback_time<R: Runtime>(
 
 #[command]
 pub(crate) async fn set_repeat_mode<R: Runtime>(
-    app: AppHandle<R>,
+    _app: AppHandle<R>,
     _mode: RepeatMode,
 ) -> Result<()> {
     // This would need implementation
@@ -151,7 +151,7 @@ pub(crate) async fn set_repeat_mode<R: Runtime>(
 
 #[command]
 pub(crate) async fn set_shuffle_mode<R: Runtime>(
-    app: AppHandle<R>,
+    _app: AppHandle<R>,
     _mode: ShuffleMode,
 ) -> Result<()> {
     // This would need implementation

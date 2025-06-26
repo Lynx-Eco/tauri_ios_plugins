@@ -12,6 +12,7 @@ links = "tauri-plugin-ios-shortcuts"
 tauri = { version = "2.5.0" }
 serde = "1.0"
 thiserror = "2"
+serde_json = "1.0"
 
 [build-dependencies]
 tauri-plugin = { version = "2.2.0", features = ["build"] }

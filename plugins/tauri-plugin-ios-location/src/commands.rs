@@ -75,7 +75,7 @@ pub(crate) async fn stop_monitoring_region<R: Runtime>(
 
 #[command]
 pub(crate) async fn get_monitored_regions<R: Runtime>(
-    app: AppHandle<R>,
+    _app: AppHandle<R>,
 ) -> Result<Vec<Region>> {
     // This would need to be implemented in the mobile module
     Ok(vec![])
@@ -83,7 +83,7 @@ pub(crate) async fn get_monitored_regions<R: Runtime>(
 
 #[command]
 pub(crate) async fn start_heading_updates<R: Runtime>(
-    app: AppHandle<R>,
+    _app: AppHandle<R>,
 ) -> Result<()> {
     // This would need to be implemented
     Ok(())
@@ -91,7 +91,7 @@ pub(crate) async fn start_heading_updates<R: Runtime>(
 
 #[command]
 pub(crate) async fn stop_heading_updates<R: Runtime>(
-    app: AppHandle<R>,
+    _app: AppHandle<R>,
 ) -> Result<()> {
     // This would need to be implemented
     Ok(())

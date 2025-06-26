@@ -109,7 +109,7 @@ pub(crate) async fn get_asset_metadata<R: Runtime>(
 
 #[command]
 pub(crate) async fn search_assets<R: Runtime>(
-    app: AppHandle<R>,
+    _app: AppHandle<R>,
     _query: SearchQuery,
 ) -> Result<Vec<Asset>> {
     // This would need implementation

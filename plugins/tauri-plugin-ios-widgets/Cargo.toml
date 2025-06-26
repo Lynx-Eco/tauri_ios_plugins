@@ -12,6 +12,8 @@ links = "tauri-plugin-ios-widgets"
 tauri = { version = "2.5.0" }
 serde = "1.0"
 thiserror = "2"
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
 
 [build-dependencies]
 tauri-plugin = { version = "2.2.0", features = ["build"] }

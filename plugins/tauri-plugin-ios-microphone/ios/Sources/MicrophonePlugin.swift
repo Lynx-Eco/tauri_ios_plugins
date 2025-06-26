@@ -2,6 +2,7 @@ import Tauri
 import WebKit
 import AVFoundation
 import UIKit
+import CoreAudioTypes
 
 struct RecordingOptions: Decodable {
     let format: String?
@@ -27,25 +28,53 @@ class MicrophonePlugin: Plugin {
     private var maxDuration: Double?
     private var durationTimer: Timer?
     
-    @objc public override func load(webview: WKWebView) {
+    private func convertToJSObject(_ dict: [String: Any]) -> JSObject {
+        var jsObject: JSObject = [:]
+        for (key, value) in dict {
+            if let str = value as? String {
+                jsObject[key] = str
+            } else if let num = value as? NSNumber {
+                if num == kCFBooleanTrue || num == kCFBooleanFalse {
+                    jsObject[key] = num.boolValue
+                } else {
+                    jsObject[key] = num.doubleValue
+                }
+            } else if let int = value as? Int {
+                jsObject[key] = Double(int)
+            } else if let double = value as? Double {
+                jsObject[key] = double
+            } else if let bool = value as? Bool {
+                jsObject[key] = bool
+            } else if let array = value as? [Any] {
+                jsObject[key] = array
+            } else if let dict = value as? [String: Any] {
+                jsObject[key] = convertToJSObject(dict)
+            } else if value is NSNull {
+                jsObject[key] = nil
+            }
+        }
+        return jsObject
+    }
+    
+    public override func load(webview: WKWebView) {
         super.load(webview: webview)
         setupAudioSession()
     }
     
-    @objc public func checkPermissions(_ invoke: Invoke) throws {
+    @objc public override func checkPermissions(_ invoke: Invoke) {
         let status = AVAudioSession.sharedInstance().recordPermission
         let permissionState = recordPermissionToString(status)
         invoke.resolve(["microphone": permissionState])
     }
     
-    @objc public func requestPermissions(_ invoke: Invoke) throws {
+    @objc public override func requestPermissions(_ invoke: Invoke) {
         AVAudioSession.sharedInstance().requestRecordPermission { granted in
             let permissionState = granted ? "granted" : "denied"
             invoke.resolve(["microphone": permissionState])
         }
     }
     
-    @objc public func startRecording(_ invoke: Invoke) throws {
+    @objc public func startRecording(_ invoke: Invoke) {
         guard AVAudioSession.sharedInstance().recordPermission == .granted else {
             invoke.reject("Microphone access denied")
             return
@@ -96,7 +125,11 @@ class MicrophonePlugin: Plugin {
             if let maxDuration = maxDuration {
                 durationTimer = Timer.scheduledTimer(withTimeInterval: maxDuration, repeats: false) { _ in
                     self.stopRecordingInternal { result in
-                        self.trigger("maxDurationReached", data: result ?? [:])
+                        if let result = result {
+                            self.trigger("maxDurationReached", data: self.convertToJSObject(result))
+                        } else {
+                            self.trigger("maxDurationReached", data: [:] as JSObject)
+                        }
                     }
                 }
             }
@@ -111,14 +144,14 @@ class MicrophonePlugin: Plugin {
             ]
             
             invoke.resolve(session)
-            trigger("recordingStarted", data: session)
+            trigger("recordingStarted", data: convertToJSObject(session))
             
         } catch {
             invoke.reject("Failed to start recording: \(error.localizedDescription)")
         }
     }
     
-    @objc public func stopRecording(_ invoke: Invoke) throws {
+    @objc public func stopRecording(_ invoke: Invoke) {
         guard recordingState != "idle" else {
             invoke.reject("No recording in progress")
             return
@@ -133,7 +166,7 @@ class MicrophonePlugin: Plugin {
         }
     }
     
-    @objc public func pauseRecording(_ invoke: Invoke) throws {
+    @objc public func pauseRecording(_ invoke: Invoke) {
         guard recordingState == "recording" else {
             invoke.reject("No active recording to pause")
             return
@@ -148,10 +181,10 @@ class MicrophonePlugin: Plugin {
         }
         
         invoke.resolve()
-        trigger("recordingPaused", data: [:])
+        trigger("recordingPaused", data: [:] as JSObject)
     }
     
-    @objc public func resumeRecording(_ invoke: Invoke) throws {
+    @objc public func resumeRecording(_ invoke: Invoke) {
         guard recordingState == "paused" else {
             invoke.reject("No paused recording to resume")
             return
@@ -163,14 +196,14 @@ class MicrophonePlugin: Plugin {
         recordingStartTime = Date()
         
         invoke.resolve()
-        trigger("recordingResumed", data: [:])
+        trigger("recordingResumed", data: [:] as JSObject)
     }
     
-    @objc public func getRecordingState(_ invoke: Invoke) throws {
+    @objc public func getRecordingState(_ invoke: Invoke) {
         invoke.resolve(recordingState)
     }
     
-    @objc public func getAudioLevels(_ invoke: Invoke) throws {
+    @objc public func getAudioLevels(_ invoke: Invoke) {
         guard let recorder = audioRecorder, recorder.isRecording else {
             invoke.resolve([
                 "peakLevel": 0.0,
@@ -191,7 +224,7 @@ class MicrophonePlugin: Plugin {
         ])
     }
     
-    @objc public func getAvailableInputs(_ invoke: Invoke) throws {
+    @objc public func getAvailableInputs(_ invoke: Invoke) {
         var inputs: [[String: Any]] = []
         
         if let availableInputs = audioSession.availableInputs {
@@ -208,15 +241,19 @@ class MicrophonePlugin: Plugin {
             }
         }
         
-        invoke.resolve(inputs)
+        // Convert the array to a dictionary response
+        invoke.resolve(["inputs": inputs])
     }
     
-    @objc public func setAudioInput(_ invoke: Invoke) throws {
+    @objc public func setAudioInput(_ invoke: Invoke) {
         struct SetInputArgs: Decodable {
             let inputId: String
         }
         
-        let args = try invoke.parseArgs(SetInputArgs.self)
+        guard let args = try? invoke.parseArgs(SetInputArgs.self) else {
+            invoke.reject("Invalid arguments")
+            return
+        }
         
         guard let availableInputs = audioSession.availableInputs else {
             invoke.reject("No inputs available")
@@ -231,13 +268,13 @@ class MicrophonePlugin: Plugin {
         do {
             try audioSession.setPreferredInput(input)
             invoke.resolve()
-            trigger("inputChanged", data: ["inputId": args.inputId])
+            trigger("inputChanged", data: ["inputId": args.inputId] as JSObject)
         } catch {
             invoke.reject("Failed to set audio input: \(error.localizedDescription)")
         }
     }
     
-    @objc public func getRecordingDuration(_ invoke: Invoke) throws {
+    @objc public func getRecordingDuration(_ invoke: Invoke) {
         guard recordingState != "idle" else {
             invoke.resolve(0.0)
             return
@@ -278,7 +315,7 @@ class MicrophonePlugin: Plugin {
         
         // Quality and bit rate
         let quality = getAudioQuality(options?.quality)
-        settings[AVAudioQualityKey] = quality
+        settings[AVEncoderAudioQualityKey] = quality
         
         if let bitRate = options?.bitRate {
             settings[AVEncoderBitRateKey] = bitRate
@@ -295,7 +332,7 @@ class MicrophonePlugin: Plugin {
         case "wav":
             return Int(kAudioFormatLinearPCM)
         case "caf":
-            return Int(kAudioFormatAppleCAF)
+            return Int(kAudioFormatAppleLossless)
         case "aiff":
             return Int(kAudioFormatAppleIMA4)
         case "mp3":
@@ -358,7 +395,7 @@ class MicrophonePlugin: Plugin {
                 "peakLevel": peakLevel,
                 "averageLevel": averageLevel,
                 "isClipping": peakLevel > 0.95
-            ])
+            ] as JSObject)
         }
     }
     
@@ -418,7 +455,7 @@ class MicrophonePlugin: Plugin {
             currentSessionId = nil
             
             completion(result)
-            trigger("recordingStopped", data: result)
+            trigger("recordingStopped", data: convertToJSObject(result))
             
         } catch {
             completion(nil)
@@ -463,13 +500,13 @@ class MicrophonePlugin: Plugin {
 extension MicrophonePlugin: AVAudioRecorderDelegate {
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         if !flag {
-            trigger("recordingError", data: ["error": "Recording finished unsuccessfully"])
+            trigger("recordingError", data: ["error": "Recording finished unsuccessfully"] as JSObject)
         }
     }
     
     func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
         if let error = error {
-            trigger("recordingError", data: ["error": error.localizedDescription])
+            trigger("recordingError", data: ["error": error.localizedDescription] as JSObject)
         }
     }
 }

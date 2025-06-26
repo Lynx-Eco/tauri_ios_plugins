@@ -86,17 +86,32 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
         DispatchQueue.main.async { [weak self] in
             self?.pendingInvoke = invoke
             
-            let types = self?.parseFileTypes(args.types) ?? [UTType.data]
-            let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)
-            picker.delegate = self
-            picker.allowsMultipleSelection = false
-            
-            if let startingDir = args.startingDirectory,
-               let url = URL(string: startingDir) {
-                picker.directoryURL = url
+            if #available(iOS 14.0, *) {
+                let types = self?.parseFileTypes(args.types) ?? [UTType.data]
+                let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)
+                picker.delegate = self
+                picker.allowsMultipleSelection = false
+                
+                if let startingDir = args.startingDirectory,
+                   let url = URL(string: startingDir) {
+                    picker.directoryURL = url
+                }
+                
+                self?.presentViewController(picker)
+            } else {
+                // Fallback for iOS 13 and earlier
+                let types = self?.parseFileTypesLegacy(args.types) ?? [kUTTypeData as String]
+                let picker = UIDocumentPickerViewController(documentTypes: types, in: .import)
+                picker.delegate = self
+                picker.allowsMultipleSelection = false
+                
+                if let startingDir = args.startingDirectory,
+                   let url = URL(string: startingDir) {
+                    picker.directoryURL = url
+                }
+                
+                self?.presentViewController(picker)
             }
-            
-            self?.presentViewController(picker)
         }
     }
     
@@ -106,17 +121,32 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
         DispatchQueue.main.async { [weak self] in
             self?.pendingInvoke = invoke
             
-            let types = self?.parseFileTypes(args.types) ?? [UTType.data]
-            let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)
-            picker.delegate = self
-            picker.allowsMultipleSelection = true
-            
-            if let startingDir = args.startingDirectory,
-               let url = URL(string: startingDir) {
-                picker.directoryURL = url
+            if #available(iOS 14.0, *) {
+                let types = self?.parseFileTypes(args.types) ?? [UTType.data]
+                let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)
+                picker.delegate = self
+                picker.allowsMultipleSelection = true
+                
+                if let startingDir = args.startingDirectory,
+                   let url = URL(string: startingDir) {
+                    picker.directoryURL = url
+                }
+                
+                self?.presentViewController(picker)
+            } else {
+                // Fallback for iOS 13 and earlier
+                let types = self?.parseFileTypesLegacy(args.types) ?? [kUTTypeData as String]
+                let picker = UIDocumentPickerViewController(documentTypes: types, in: .import)
+                picker.delegate = self
+                picker.allowsMultipleSelection = true
+                
+                if let startingDir = args.startingDirectory,
+                   let url = URL(string: startingDir) {
+                    picker.directoryURL = url
+                }
+                
+                self?.presentViewController(picker)
             }
-            
-            self?.presentViewController(picker)
         }
     }
     
@@ -124,11 +154,20 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
         DispatchQueue.main.async { [weak self] in
             self?.pendingInvoke = invoke
             
-            let picker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.folder])
-            picker.delegate = self
-            picker.allowsMultipleSelection = false
-            
-            self?.presentViewController(picker)
+            if #available(iOS 14.0, *) {
+                let picker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.folder])
+                picker.delegate = self
+                picker.allowsMultipleSelection = false
+                
+                self?.presentViewController(picker)
+            } else {
+                // Folders not directly supported in iOS 13, use generic picker
+                let picker = UIDocumentPickerViewController(documentTypes: [kUTTypeFolder as String], in: .open)
+                picker.delegate = self
+                picker.allowsMultipleSelection = false
+                
+                self?.presentViewController(picker)
+            }
         }
     }
     
@@ -159,11 +198,19 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
                 
                 self.pendingInvoke = invoke
                 
-                let types = self.parseFileTypes(args.types)
-                let picker = UIDocumentPickerViewController(forExporting: [tempUrl], asCopy: true)
-                picker.delegate = self
-                
-                self.presentViewController(picker)
+                if #available(iOS 14.0, *) {
+                    let types = self.parseFileTypes(args.types)
+                    let picker = UIDocumentPickerViewController(forExporting: [tempUrl], asCopy: true)
+                    picker.delegate = self
+                    
+                    self.presentViewController(picker)
+                } else {
+                    // Fallback for iOS 13 and earlier
+                    let picker = UIDocumentPickerViewController(urls: [tempUrl], in: .exportToService)
+                    picker.delegate = self
+                    
+                    self.presentViewController(picker)
+                }
             } catch {
                 invoke.reject("Failed to create temporary file: \(error.localizedDescription)")
             }
@@ -187,7 +234,9 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
             self?.documentInteractionController?.delegate = self
             
             if let controller = self?.documentInteractionController,
-               let view = self?.webView {
+               let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first,
+               let view = window.rootViewController?.view {
                 if !controller.presentOpenInMenu(from: view.bounds, in: view, animated: true) {
                     invoke.reject("No apps available to open this file")
                 } else {
@@ -205,12 +254,22 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
         DispatchQueue.main.async { [weak self] in
             self?.pendingInvoke = invoke
             
-            let types = self?.parseFileTypes(args.types) ?? [UTType.data]
-            let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)
-            picker.delegate = self
-            picker.allowsMultipleSelection = args.allowMultiple
-            
-            self?.presentViewController(picker)
+            if #available(iOS 14.0, *) {
+                let types = self?.parseFileTypes(args.types) ?? [UTType.data]
+                let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)
+                picker.delegate = self
+                picker.allowsMultipleSelection = args.allowMultiple
+                
+                self?.presentViewController(picker)
+            } else {
+                // Fallback for iOS 13 and earlier
+                let types = self?.parseFileTypesLegacy(args.types) ?? [kUTTypeData as String]
+                let picker = UIDocumentPickerViewController(documentTypes: types, in: .import)
+                picker.delegate = self
+                picker.allowsMultipleSelection = args.allowMultiple
+                
+                self?.presentViewController(picker)
+            }
         }
     }
     
@@ -232,10 +291,18 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
         DispatchQueue.main.async { [weak self] in
             self?.pendingInvoke = invoke
             
-            let picker = UIDocumentPickerViewController(forExporting: urls, asCopy: true)
-            picker.delegate = self
-            
-            self?.presentViewController(picker)
+            if #available(iOS 14.0, *) {
+                let picker = UIDocumentPickerViewController(forExporting: urls, asCopy: true)
+                picker.delegate = self
+                
+                self?.presentViewController(picker)
+            } else {
+                // Fallback for iOS 13 and earlier
+                let picker = UIDocumentPickerViewController(urls: urls, in: .exportToService)
+                picker.delegate = self
+                
+                self?.presentViewController(picker)
+            }
         }
     }
     
@@ -254,7 +321,7 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
             let resourceKeys: [URLResourceKey] = [
                 .nameKey, .fileSizeKey, .creationDateKey, .contentModificationDateKey,
                 .contentAccessDateKey, .typeIdentifierKey, .isDirectoryKey,
-                .isPackageKey, .isHiddenKey, .isAliasFileKey, .ubiquitousItemIsDownloadedKey,
+                .isPackageKey, .isHiddenKey, .isAliasFileKey, .ubiquitousItemIsDownloadingKey,
                 .ubiquitousItemDownloadingStatusKey
             ]
             
@@ -294,8 +361,8 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
                 
                 // Cloud status
                 let cloudStatus: String
-                if let isDownloaded = resourceValues.ubiquitousItemIsDownloaded {
-                    if isDownloaded {
+                if let isDownloading = resourceValues.ubiquitousItemIsDownloading {
+                    if !isDownloading {
                         cloudStatus = "downloaded"
                     } else if let downloadingStatus = resourceValues.ubiquitousItemDownloadingStatus {
                         if downloadingStatus == .current {
@@ -332,7 +399,7 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
                 }
             }
             
-            invoke.resolve(documents)
+            invoke.resolve(["documents": documents])
         } catch {
             invoke.reject("Failed to list documents: \(error.localizedDescription)")
         }
@@ -554,8 +621,12 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
             }
             
             if let popover = activityVC.popoverPresentationController {
-                popover.sourceView = self?.webView
-                popover.sourceRect = self?.webView?.bounds ?? .zero
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let window = windowScene.windows.first,
+                   let view = window.rootViewController?.view {
+                    popover.sourceView = view
+                    popover.sourceRect = view.bounds
+                }
             }
             
             self?.presentViewController(activityVC)
@@ -599,13 +670,13 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
         
         do {
             let resourceValues = try url.resourceValues(forKeys: [
-                .ubiquitousItemIsDownloadedKey,
+                .ubiquitousItemIsDownloadingKey,
                 .ubiquitousItemDownloadingStatusKey
             ])
             
             let status: String
-            if let isDownloaded = resourceValues.ubiquitousItemIsDownloaded {
-                if isDownloaded {
+            if let isDownloading = resourceValues.ubiquitousItemIsDownloading {
+                if !isDownloading {
                     status = "downloaded"
                 } else if let downloadingStatus = resourceValues.ubiquitousItemDownloadingStatus {
                     if downloadingStatus == .current {
@@ -694,7 +765,7 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
             self?.trigger("fileChanged", data: [
                 "fileUrl": change.fileUrl.absoluteString,
                 "eventType": change.eventType,
-                "oldUrl": change.oldUrl?.absoluteString,
+                "oldUrl": change.oldUrl?.absoluteString ?? NSNull(),
                 "timestamp": ISO8601DateFormatter().string(from: change.timestamp)
             ])
         }
@@ -754,7 +825,7 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
         }
         
         if controller.allowsMultipleSelection {
-            invoke.resolve(pickedFiles)
+            invoke.resolve(["files": pickedFiles])
         } else {
             invoke.resolve(pickedFiles.first ?? [:])
         }
@@ -777,6 +848,7 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
     
     // MARK: - Helpers
     
+    @available(iOS 14.0, *)
     private func parseFileTypes(_ types: [String]) -> [UTType] {
         var utTypes: [UTType] = []
         
@@ -793,13 +865,9 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
             case "text":
                 utTypes.append(.text)
             case "spreadsheet":
-                if #available(iOS 14.0, *) {
-                    utTypes.append(.spreadsheet)
-                }
+                utTypes.append(.spreadsheet)
             case "presentation":
-                if #available(iOS 14.0, *) {
-                    utTypes.append(.presentation)
-                }
+                utTypes.append(.presentation)
             case "archive":
                 utTypes.append(.archive)
             default:
@@ -811,6 +879,41 @@ class FilesPlugin: Plugin, UIDocumentPickerDelegate, UIDocumentInteractionContro
         }
         
         return utTypes.isEmpty ? [.data] : utTypes
+    }
+    
+    // Legacy method for iOS 13 and earlier
+    private func parseFileTypesLegacy(_ types: [String]) -> [String] {
+        var utTypes: [String] = []
+        
+        for type in types {
+            switch type.lowercased() {
+            case "image":
+                utTypes.append(kUTTypeImage as String)
+            case "video":
+                utTypes.append(kUTTypeMovie as String)
+            case "audio":
+                utTypes.append(kUTTypeAudio as String)
+            case "pdf":
+                utTypes.append(kUTTypePDF as String)
+            case "text":
+                utTypes.append(kUTTypeText as String)
+            case "spreadsheet":
+                utTypes.append("com.apple.iwork.numbers.numbers" as String)
+                utTypes.append("com.microsoft.excel.xls" as String)
+                utTypes.append("com.microsoft.excel.xlsx" as String)
+            case "presentation":
+                utTypes.append("com.apple.iwork.keynote.key" as String)
+                utTypes.append("com.microsoft.powerpoint.ppt" as String)
+                utTypes.append("com.microsoft.powerpoint.pptx" as String)
+            case "archive":
+                utTypes.append(kUTTypeArchive as String)
+            default:
+                // Use the type string as-is
+                utTypes.append(type)
+            }
+        }
+        
+        return utTypes.isEmpty ? [kUTTypeData as String] : utTypes
     }
     
     private func presentViewController(_ viewController: UIViewController) {

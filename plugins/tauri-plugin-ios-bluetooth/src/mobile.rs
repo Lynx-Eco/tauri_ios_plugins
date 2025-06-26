@@ -279,9 +279,3 @@ impl<R: Runtime> Bluetooth<R> {
             .map_err(Into::into)
     }
 }
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-pub enum WriteType {
-    WithResponse,
-    WithoutResponse,
-}

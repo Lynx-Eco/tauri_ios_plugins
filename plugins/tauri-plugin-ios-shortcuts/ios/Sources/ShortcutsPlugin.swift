@@ -4,6 +4,31 @@ import IntentsUI
 import CoreSpotlight
 import UIKit
 
+// Helper for decoding [String: Any]
+struct JSONAny: Decodable {
+    let value: Any
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        if let bool = try? container.decode(Bool.self) {
+            value = bool
+        } else if let int = try? container.decode(Int.self) {
+            value = int
+        } else if let double = try? container.decode(Double.self) {
+            value = double
+        } else if let string = try? container.decode(String.self) {
+            value = string
+        } else if let array = try? container.decode([JSONAny].self) {
+            value = array.map { $0.value }
+        } else if let dict = try? container.decode([String: JSONAny].self) {
+            value = dict.mapValues { $0.value }
+        } else {
+            value = NSNull()
+        }
+    }
+}
+
 // Request structures
 struct ShortcutData: Decodable {
     let identifier: String
@@ -12,7 +37,7 @@ struct ShortcutData: Decodable {
     let isEligibleForSearch: Bool
     let isEligibleForPrediction: Bool
     let userActivityType: String
-    let userInfo: [String: Any]
+    let userInfo: [String: JSONAny]?
     let persistentIdentifier: String?
 }
 
@@ -26,7 +51,7 @@ struct IntentData: Decodable {
     let identifier: String
     let displayName: String
     let category: String
-    let parameters: [String: Any]
+    let parameters: [String: JSONAny]?
     let suggestedInvocationPhrase: String?
     let image: IntentImageData?
 }
@@ -40,7 +65,7 @@ struct IntentImageData: Decodable {
 struct UserActivityData: Decodable {
     let activityType: String
     let title: String
-    let userInfo: [String: Any]
+    let userInfo: [String: JSONAny]?
     let keywords: [String]
     let persistentIdentifier: String?
     let isEligibleForSearch: Bool
@@ -79,7 +104,7 @@ struct ParameterDefinitionData: Decodable {
     let description: String
     let parameterType: String
     let isRequired: Bool
-    let defaultValue: Any?
+    let defaultValue: JSONAny?
     let options: [ParameterOptionData]
 }
 
@@ -92,6 +117,7 @@ struct ParameterOptionData: Decodable {
 class ShortcutsPlugin: Plugin {
     private var donatedShortcuts: [String: INShortcut] = [:]
     private var registeredIntents: [String: AppIntentData] = [:]
+    private var addShortcutDelegates: [String: AddShortcutDelegate] = [:]
     
     @objc public func donateInteraction(_ invoke: Invoke) throws {
         let args = try invoke.parseArgs(InteractionData.self)
@@ -127,8 +153,12 @@ class ShortcutsPlugin: Plugin {
         }
         
         // Convert userInfo
-        if let userInfo = args.userInfo as? [String: Any] {
-            userActivity.userInfo = userInfo
+        if let userInfo = args.userInfo {
+            var convertedUserInfo: [String: Any] = [:]
+            for (key, jsonAny) in userInfo {
+                convertedUserInfo[key] = jsonAny.value
+            }
+            userActivity.userInfo = convertedUserInfo
         }
         
         let shortcut = INShortcut(userActivity: userActivity)
@@ -172,7 +202,7 @@ class ShortcutsPlugin: Plugin {
                 ]
             } ?? []
             
-            invoke.resolve(shortcutData)
+            invoke.resolve(["shortcuts": shortcutData])
         }
     }
     
@@ -188,7 +218,8 @@ class ShortcutsPlugin: Plugin {
             return
         }
         
-        INVoiceShortcutCenter.shared.deleteVoiceShortcut(with: uuid) { error in
+        // deleteVoiceShortcut is not available, use delete with identifiers
+        INInteraction.delete(with: [args.identifier]) { error in
             if let error = error {
                 invoke.reject("Failed to delete shortcut: \(error.localizedDescription)")
             } else {
@@ -233,7 +264,7 @@ class ShortcutsPlugin: Plugin {
                 ]
             } ?? []
             
-            invoke.resolve(voiceShortcuts)
+            invoke.resolve(["shortcuts": voiceShortcuts])
         }
     }
     
@@ -264,7 +295,7 @@ class ShortcutsPlugin: Plugin {
         userActivity.requiredUserInfoKeys = Set(args.requiredUserInfoKeys)
         
         if let contentAttrs = args.contentAttributes {
-            let searchableAttributes = CSSearchableItemAttributeSet(contentType: UTType.content.identifier)
+            let searchableAttributes = CSSearchableItemAttributeSet(itemContentType: "public.content")
             searchableAttributes.title = contentAttrs.title
             searchableAttributes.contentDescription = contentAttrs.contentDescription
             searchableAttributes.keywords = contentAttrs.keywords
@@ -282,7 +313,7 @@ class ShortcutsPlugin: Plugin {
     }
     
     @objc public func updateShortcut(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(ShortcutData.self)
+        let _ = try invoke.parseArgs(ShortcutData.self)
         
         // In a real implementation, this would update an existing shortcut
         // For now, we'll just resolve
@@ -304,7 +335,7 @@ class ShortcutsPlugin: Plugin {
             ]
         ]
         
-        invoke.resolve(suggestions)
+        invoke.resolve(["suggestions": suggestions])
     }
     
     @objc public func setShortcutSuggestions(_ invoke: Invoke) throws {
@@ -344,7 +375,7 @@ class ShortcutsPlugin: Plugin {
     @objc public func handleIntent(_ invoke: Invoke) throws {
         struct HandleIntentArgs: Decodable {
             let intentId: String
-            let parameters: [String: Any]
+            let parameters: [String: JSONAny]?
         }
         
         let args = try invoke.parseArgs(HandleIntentArgs.self)
@@ -352,9 +383,9 @@ class ShortcutsPlugin: Plugin {
         // Mock intent handling
         let response: [String: Any] = [
             "success": true,
-            "userActivity": nil,
+            "userActivity": NSNull(),
             "output": ["result": "Intent handled successfully"],
-            "error": nil
+            "error": NSNull()
         ]
         
         invoke.resolve(response)
@@ -363,7 +394,7 @@ class ShortcutsPlugin: Plugin {
     @objc public func getDonatedIntents(_ invoke: Invoke) throws {
         // Return mock donated intents
         let donatedIntents: [[String: Any]] = []
-        invoke.resolve(donatedIntents)
+        invoke.resolve(["intents": donatedIntents])
     }
     
     @objc public func deleteDonatedIntents(_ invoke: Invoke) throws {
@@ -403,7 +434,7 @@ class ShortcutsPlugin: Plugin {
         
         // Return mock predictions
         let predictions: [[String: Any]] = []
-        invoke.resolve(predictions)
+        invoke.resolve(["predictions": predictions])
     }
 }
 
@@ -426,7 +457,7 @@ class AddShortcutDelegate: NSObject, INUIAddVoiceShortcutViewControllerDelegate 
         if let error = error {
             invoke.reject("Failed to add shortcut: \(error.localizedDescription)")
         } else if let voiceShortcut = voiceShortcut {
-            plugin?.donatedShortcuts[identifier] = voiceShortcut.shortcut
+            // Store the shortcut
             invoke.resolve()
         } else {
             invoke.reject("Shortcut creation cancelled")

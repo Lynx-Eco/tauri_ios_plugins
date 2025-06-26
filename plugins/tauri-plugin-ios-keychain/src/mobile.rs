@@ -112,4 +112,21 @@ impl<R: Runtime> Keychain<R> {
             .run_mobile_plugin("generatePassword", options)
             .map_err(Into::into)
     }
+
+    pub fn get_access_group(&self) -> Result<Vec<String>> {
+        self.0
+            .run_mobile_plugin("getAccessGroup", ())
+            .map_err(Into::into)
+    }
+
+    pub fn set_access_group(&self, access_group: String) -> Result<()> {
+        #[derive(serde::Serialize)]
+        struct SetAccessGroupArgs {
+            access_group: String,
+        }
+        
+        self.0
+            .run_mobile_plugin("setAccessGroup", SetAccessGroupArgs { access_group })
+            .map_err(Into::into)
+    }
 }

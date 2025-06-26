@@ -70,6 +70,35 @@ struct VoipPushData: Decodable {
 }
 
 class CallKitPlugin: Plugin, CXProviderDelegate, PKPushRegistryDelegate {
+    
+    // Helper to convert [String: Any] to JSObject
+    private func convertToJSObject(_ dict: [String: Any]) -> JSObject {
+        var jsObject: JSObject = [:]
+        for (key, value) in dict {
+            if let str = value as? String {
+                jsObject[key] = str
+            } else if let num = value as? NSNumber {
+                if num == kCFBooleanTrue || num == kCFBooleanFalse {
+                    jsObject[key] = num.boolValue
+                } else {
+                    jsObject[key] = num.doubleValue
+                }
+            } else if let int = value as? Int {
+                jsObject[key] = Double(int)
+            } else if let double = value as? Double {
+                jsObject[key] = double
+            } else if let bool = value as? Bool {
+                jsObject[key] = bool
+            } else if let array = value as? [Any] {
+                jsObject[key] = array
+            } else if let dict = value as? [String: Any] {
+                jsObject[key] = convertToJSObject(dict)
+            } else if value is NSNull {
+                jsObject[key] = nil
+            }
+        }
+        return jsObject
+    }
     private var provider: CXProvider?
     private var callController = CXCallController()
     private var activeCalls: [UUID: CallInfo] = [:]
@@ -100,7 +129,8 @@ class CallKitPlugin: Plugin, CXProviderDelegate, PKPushRegistryDelegate {
         config.maximumCallGroups = args.maximumCallGroups
         config.maximumCallsPerCallGroup = args.maximumCallsPerGroup
         config.supportsVideo = args.supportsVideo
-        config.includeCallsInRecents = args.includeCallsInRecents
+        // includeCallsInRecents is deprecated/not available
+        // config.includeCallsInRecents = args.includeCallsInRecents
         
         if let ringtone = args.ringtoneSound {
             config.ringtoneSound = ringtone
@@ -400,7 +430,7 @@ class CallKitPlugin: Plugin, CXProviderDelegate, PKPushRegistryDelegate {
             calls.append(call)
         }
         
-        invoke.resolve(calls)
+        invoke.resolve(["calls": calls])
     }
     
     @objc public func registerForVoipNotifications(_ invoke: Invoke) throws {
@@ -418,7 +448,7 @@ class CallKitPlugin: Plugin, CXProviderDelegate, PKPushRegistryDelegate {
             "canReceiveCalls": true,
             "supportsVideo": true,
             "supportsVoip": true,
-            "cellularProvider": nil
+            "cellularProvider": NSNull()
         ]
         
         invoke.resolve(capability)
@@ -439,7 +469,7 @@ class CallKitPlugin: Plugin, CXProviderDelegate, PKPushRegistryDelegate {
             routes.append(route)
         }
         
-        invoke.resolve(routes)
+        invoke.resolve(["routes": routes])
     }
     
     @objc public func setAudioRoute(_ invoke: Invoke) throws {
@@ -473,7 +503,7 @@ class CallKitPlugin: Plugin, CXProviderDelegate, PKPushRegistryDelegate {
             let uuid: String
         }
         
-        let args = try invoke.parseArgs(StartAudioArgs.self)
+        let _ = try invoke.parseArgs(StartAudioArgs.self)
         
         // Audio is typically started automatically
         invoke.resolve()
@@ -541,7 +571,7 @@ class CallKitPlugin: Plugin, CXProviderDelegate, PKPushRegistryDelegate {
     }
     
     @objc public func requestTransaction(_ invoke: Invoke) throws {
-        let args = try invoke.parseArgs(TransactionData.self)
+        let _ = try invoke.parseArgs(TransactionData.self)
         
         // Transaction handling would be implemented based on action type
         invoke.resolve()
@@ -562,7 +592,7 @@ class CallKitPlugin: Plugin, CXProviderDelegate, PKPushRegistryDelegate {
         let args = try invoke.parseArgs(VoipPushData.self)
         
         // Convert to incoming call
-        let callData = IncomingCallData(
+        let _ = IncomingCallData(
             uuid: args.uuid,
             handle: CallHandleData(handleType: "phoneNumber", value: args.handle),
             hasVideo: args.hasVideo,
@@ -668,7 +698,24 @@ class CallKitPlugin: Plugin, CXProviderDelegate, PKPushRegistryDelegate {
     
     func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         if type == .voIP {
-            trigger("voipPushReceived", data: ["payload": payload.dictionaryPayload])
+            // Convert payload to JSObject
+            var jsPayload: JSObject = [:]
+            for (key, value) in payload.dictionaryPayload {
+                if let stringKey = key as? String {
+                    if let str = value as? String {
+                        jsPayload[stringKey] = str
+                    } else if let num = value as? NSNumber {
+                        jsPayload[stringKey] = num.doubleValue
+                    } else if let bool = value as? Bool {
+                        jsPayload[stringKey] = bool
+                    } else if let dict = value as? [String: Any] {
+                        jsPayload[stringKey] = convertToJSObject(dict)
+                    } else if let array = value as? [Any] {
+                        jsPayload[stringKey] = array
+                    }
+                }
+            }
+            trigger("voipPushReceived", data: ["payload": jsPayload])
         }
         completion()
     }
